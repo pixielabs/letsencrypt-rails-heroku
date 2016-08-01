@@ -106,11 +106,14 @@ You can see these details by typing `heroku domains`.
 ## Adding a scheduled task
 
 You should add a scheduled task on Heroku to renew the certificate. The
-scheduled task should be configured to run `rake letsencrypt:renew`.
+scheduled task should be configured to run `rake letsencrypt:renew` as often
+as you want to renew your certificate. Letsencrypt certificates are valid for
+90 days, but there's no harm renewing them more frequently than that.
 
 Heroku Scheduler only lets you run a task as infrequently as once a day, but
-you don't want to renew your SSL certificate every day. You can make it run
-less frequently using a shell control statement. For example to renew your
+you don't want to renew your SSL certificate every day (you will hit
+[the rate limit](https://letsencrypt.org/docs/rate-limits/)). You can make it
+run less frequently using a shell control statement. For example to renew your
 certificate on the 1st day of every month:
 
 ```
