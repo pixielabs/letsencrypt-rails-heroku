@@ -29,6 +29,7 @@ Gem::Specification.new do |s|
     "letsencrypt-rails-heroku.gemspec",
     "lib/letsencrypt-rails-heroku.rb",
     "lib/letsencrypt-rails-heroku/letsencrypt.rb",
+    "lib/letsencrypt-rails-heroku/middleware.rb",
     "lib/letsencrypt-rails-heroku/railtie.rb",
     "lib/tasks/letsencrypt.rake"
   ]
