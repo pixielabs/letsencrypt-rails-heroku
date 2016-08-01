@@ -158,6 +158,8 @@ following security considerations:
 - Provide instructions for running the gem decoupled from the app it is 
   securing, for the paranoid.
 
+- Support non-SNI Heroku SSL too.
+
 ## Contributing
 
 - Check out the latest master to make sure the feature hasn't been implemented
