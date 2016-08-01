@@ -27,14 +27,13 @@ Add the gem to your Gemfile:
 gem 'letsencrypt-rails-heroku', group: 'production'
 ```
 
-And mount it in your `config/routes.rb` as low as you can (see security
-considerations below).
+And add it as middleware in your `config/environments/production.rb`:
 
 ```
-Rails.application.routes.draw do
+Rails.application.configure do
   <...>
 
-  mount Letsencrypt::Engine, at: '/'
+  config.middleware.use Letsencrypt::Middleware
 
   <...>
 end
@@ -45,7 +44,10 @@ end
 By default the gem will try to use the following set of configuration variables,
 which you should set.
 
- * `ACME_DOMAIN`: Comma separated list of domains for which you want certificates, e.g. `example.com,www.example.com`
+ * `ACME_DOMAIN`: Comma separated list of domains for which you want
+   certificates, e.g. `example.com,www.example.com`. Your Heroku app should be
+   configured to answer to all these domains, because LetsEncrypt will make a
+   request to verify ownership.
  * `ACME_EMAIL`: Your email address, should be valid.
  * `HEROKU_TOKEN`: An API token for this app. See below
  * `HEROKU_APP`: Name of Heroku app e.g. bottomless-cavern-7173
@@ -101,11 +103,6 @@ following security considerations:
 
    The gem performs some cursory checks to make sure the filename is roughly
    what is expected to try and mitigate this.
-
- - We suggest mounting the engine at the root of your app, but that's not ideal
-   because it means this gem can (theoretically) add any route to your general
-   apps routes. To mitigate you should add it as low as possible in your
-   routes.rb file.
 
 ## To-do list
 
