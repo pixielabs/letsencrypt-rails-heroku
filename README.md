@@ -24,6 +24,10 @@ handle renewals and keeping your certificate up to date.
 Add the gem to your Gemfile:
 
 ```
+# Until the API calls are out of beta, you must manually specify my fork
+# of the Heroku API gem:
+gem 'platform-api', github: 'jalada/platform-api', branch: 'master'
+
 gem 'letsencrypt-rails-heroku', group: 'production'
 ```
 
@@ -76,10 +80,44 @@ Created OAuth authorization.
 
 Use the output of that to set the token (`HEROKU_TOKEN`).
 
+## Using for the first time
+
+After deploying, run `heroku run rake letsencrypt:renew`. Ensure that the
+output looks good:
+
+```
+$ heroku run rake letsencrypt-renew
+Running rake letsencrypt:renew on ⬢ yourapp... ⣷ connecting, run.1234
+Creating account key...Done!
+Registering with LetsEncrypt...Done!
+Setting config vars on Heroku...Done!
+Giving config vars time to change...Done!
+Testing filename works (to bring up app)...done!
+Adding new certificate...Done!
+$ 
+```
+
+If this is the first time you have used an SNI-based SSL certificate on your
+app, you may need to alter your DNS configuration as per
+[Heroku's instructions](https://devcenter.heroku.com/articles/ssl-beta#change-your-dns-for-all-domains-on-your-app).
+
+You can see these details by typing `heroku domains`.
+
 ## Adding a scheduled task
 
 You should add a scheduled task on Heroku to renew the certificate. The
 scheduled task should be configured to run `rake letsencrypt:renew`.
+
+Heroku Scheduler only lets you run a task as infrequently as once a day, but
+you don't want to renew your SSL certificate every day. You can make it run
+less frequently using a shell control statement. For example to renew your
+certificate on the 1st day of every month:
+
+```
+if [ "$(date +%d)" = 01 ]; then rake letsencrypt:renew; fi
+```
+
+Source: [blog.dbrgn.ch](https://blog.dbrgn.ch/2013/10/4/heroku-schedule-weekly-monthly-tasks/)
 
 ## Security considerations
 
