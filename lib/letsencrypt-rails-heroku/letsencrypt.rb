@@ -10,7 +10,7 @@ module Letsencrypt
 
   def self.challenge_configured?
     configuration.acme_challenge_filename.present? && 
-      configuration.acme_challenge_filename.starts_with?("/.well-known/") &&
+      configuration.acme_challenge_filename.starts_with?(".well-known/") &&
       configuration.acme_challenge_file_content.present?
   end
 
