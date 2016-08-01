@@ -13,7 +13,7 @@ Gem::Specification.new do |s|
   s.authors = ["David Somers"]
   s.date = "2016-08-01"
   s.description = "This gem automatically handles creation, renewal, and applying SSL certificates from LetsEncrypt to your Heroku account."
-  s.email = "david@jalada.co.uk"
+  s.email = "david@pixielabs.co.uk"
   s.extra_rdoc_files = [
     "LICENSE.txt",
     "README.md"
@@ -33,7 +33,7 @@ Gem::Specification.new do |s|
     "lib/letsencrypt-rails-heroku/railtie.rb",
     "lib/tasks/letsencrypt.rake"
   ]
-  s.homepage = "http://github.com/jalada/letsencrypt-rails-heroku"
+  s.homepage = "http://github.com/pixielabs/letsencrypt-rails-heroku"
   s.licenses = ["MIT"]
   s.rubygems_version = "2.5.1"
   s.summary = "Automatic LetsEncrypt certs in your Rails app on Heroku"

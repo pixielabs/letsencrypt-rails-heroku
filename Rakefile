@@ -15,11 +15,11 @@ require 'juwelier'
 Juwelier::Tasks.new do |gem|
   # gem is a Gem::Specification... see http://guides.rubygems.org/specification-reference/ for more options
   gem.name = "letsencrypt-rails-heroku"
-  gem.homepage = "http://github.com/jalada/letsencrypt-rails-heroku"
+  gem.homepage = "http://github.com/pixielabs/letsencrypt-rails-heroku"
   gem.license = "MIT"
   gem.summary = %Q{Automatic LetsEncrypt certs in your Rails app on Heroku}
   gem.description = %Q{This gem automatically handles creation, renewal, and applying SSL certificates from LetsEncrypt to your Heroku account.}
-  gem.email = "david@jalada.co.uk"
+  gem.email = "david@pixielabs.co.uk"
   gem.authors = ["David Somers"]
 
   # dependencies defined in Gemfile
