@@ -1,5 +1,7 @@
 require 'open-uri'
 require 'openssl'
+require 'acme-client'
+require 'platform-api'
 
 namespace :letsencrypt do
 
