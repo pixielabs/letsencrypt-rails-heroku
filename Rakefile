@@ -17,8 +17,8 @@ Juwelier::Tasks.new do |gem|
   gem.name = "letsencrypt-rails-heroku"
   gem.homepage = "http://github.com/jalada/letsencrypt-rails-heroku"
   gem.license = "MIT"
-  gem.summary = %Q{TODO: one-line summary of your gem}
-  gem.description = %Q{TODO: longer description of your gem}
+  gem.summary = %Q{Automatic LetsEncrypt certs in your Rails app on Heroku}
+  gem.description = %Q{This gem automatically handles creation, renewal, and applying SSL certificates from LetsEncrypt to your Heroku account.}
   gem.email = "david@jalada.co.uk"
   gem.authors = ["David Somers"]
 

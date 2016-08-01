@@ -1,10 +1,10 @@
 source "https://rubygems.org"
-# Add dependencies required to use your gem here.
-# Example:
-#   gem "activesupport", ">= 2.3.5"
 
-# Add dependencies to develop your gem here.
-# Include everything needed to run rake, tests, features, etc.
+gem 'acme-client', '~> 0.3.7'
+# SNI endpoints not supported yet:
+# <https://github.com/heroku/platform-api/issues/49>
+gem 'platform-api', github: 'jalada/platform-api', branch: 'master'
+
 group :development do
   gem "shoulda", ">= 0"
   gem "rdoc", "~> 3.12"
