@@ -25,7 +25,7 @@ namespace :letsencrypt do
     registration.agree_terms
     puts "Done!"
 
-    authorization = client.authorize(domain: Letsencrypt.configure.acme_domain)
+    authorization = client.authorize(domain: Letsencrypt.configuration.acme_domain)
     challenge = authorization.http01
 
     print "Setting config vars on Heroku..."
