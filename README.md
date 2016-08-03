@@ -88,7 +88,7 @@ After deploying, run `heroku run rake letsencrypt:renew`. Ensure that the
 output looks good:
 
 ```
-$ heroku run rake letsencrypt-renew
+$ heroku run rake letsencrypt:renew
 Running rake letsencrypt:renew on ⬢ yourapp... ⣷ connecting, run.1234
 Creating account key...Done!
 Registering with LetsEncrypt...Done!
