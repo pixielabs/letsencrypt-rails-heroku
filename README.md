@@ -7,7 +7,7 @@ on Heroku using their free SNI-based SSL and LetsEncrypt. It will automatically
 handle renewals and keeping your certificate up to date.
 
 
-## Pre-requestives
+## Requirements
 
  - Whilst it is in beta, you must use the labs feature to enable Heroku's free
    SSL offering:
