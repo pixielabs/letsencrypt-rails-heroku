@@ -35,13 +35,25 @@ gem 'letsencrypt-rails-heroku', group: 'production'
 
 And add it as middleware in your `config/environments/production.rb`:
 
-```
+```ruby
 Rails.application.configure do
-  <...>
+  # <...>
 
   config.middleware.use Letsencrypt::Middleware
 
-  <...>
+  # <...>
+end
+```
+
+If you have configured your app to enforce SSL with the configuration option `config.force_ssl = true` you will need to insert the middleware in front of the middleware performing that enforcement instead, as LetsEncrypt do not allow redirects on their verification requests:
+
+```ruby
+Rails.application.configure do
+  # <...>
+  
+  config.middleware.insert_before ActionDispatch::SSL, Letsencrypt::Middleware
+
+  # <...>
 end
 ```
 
