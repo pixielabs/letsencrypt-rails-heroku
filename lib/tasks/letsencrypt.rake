@@ -27,38 +27,47 @@ namespace :letsencrypt do
     registration.agree_terms
     puts "Done!"
 
-    authorization = client.authorize(domain: Letsencrypt.configuration.acme_domain)
-    challenge = authorization.http01
+    domains = Letsencrypt.configuration.acme_domain.split(',').map(&:strip)
 
-    print "Setting config vars on Heroku..."
-    heroku.config_var.update(heroku_app, {
-      'ACME_CHALLENGE_FILENAME' => challenge.filename,
-      'ACME_CHALLENGE_FILE_CONTENT' => challenge.file_content
-    })
-    puts "Done!"
+    domains.each do |domain|
+      puts "Performing verification for #{domain}:"
 
-    # Wait for request to go through
-    print "Giving config vars time to change..."
-    sleep(5)
-    puts "Done!"
+      authorization = client.authorize(domain: domain)
+      challenge = authorization.http01
 
-    # Wait for app to come up
-    print "Testing filename works (to bring up app)..."
+      print "Setting config vars on Heroku..."
+      heroku.config_var.update(heroku_app, {
+        'ACME_CHALLENGE_FILENAME' => challenge.filename,
+        'ACME_CHALLENGE_FILE_CONTENT' => challenge.file_content
+      })
+      puts "Done!"
 
-    # Get the domain name from Heroku
-    hostname = heroku.domain.list(heroku_app).first['hostname']
-    open("http://#{hostname}/#{challenge.filename}").read
-    puts "done!"
+      # Wait for request to go through
+      print "Giving config vars time to change..."
+      sleep(5)
+      puts "Done!"
 
-    # Once you are ready to serve the confirmation request you can proceed.
-    challenge.request_verification # => true
-    challenge.verify_status # => 'pending'
+      # Wait for app to come up
+      print "Testing filename works (to bring up app)..."
 
-    # Wait a bit for the server to make the request, or just blink. It should be fast.
-    sleep(5)
+      # Get the domain name from Heroku
+      hostname = heroku.domain.list(heroku_app).first['hostname']
+      open("http://#{hostname}/#{challenge.filename}").read
+      puts "Done!"
 
-    unless challenge.verify_status == 'valid'
-      abort "Problem with verifying challenge."
+      print "Giving LetsEncrypt some time to verify..."
+      # Once you are ready to serve the confirmation request you can proceed.
+      challenge.request_verification # => true
+      challenge.verify_status # => 'pending'
+
+      sleep(3)
+      puts "Done!"
+
+      unless challenge.verify_status == 'valid'
+        abort "Problem with verifying challenge."
+      end
+
+      puts ""
     end
 
     # Unset temporary config vars. We don't care about waiting for this to
@@ -69,8 +78,7 @@ namespace :letsencrypt do
     })
 
     # Create CSR
-    names = Letsencrypt.configuration.acme_domain.split(',').map(&:strip)
-    csr = Acme::Client::CertificateRequest.new(names: names)
+    csr = Acme::Client::CertificateRequest.new(names: domains)
 
     # Get certificate
     certificate = client.new_certificate(csr) # => #<Acme::Client::Certificate ....>
