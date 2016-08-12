@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 require 'open-uri'
 require 'openssl'
 require 'acme-client'
@@ -64,7 +65,7 @@ namespace :letsencrypt do
       puts "Done!"
 
       unless challenge.verify_status == 'valid'
-        abort "Problem with verifying challenge."
+        abort "Problem with verifying challenge: status=#{challenge.verify_status} - error=#{challenge.error}"
       end
 
       puts ""
@@ -84,7 +85,7 @@ namespace :letsencrypt do
     certificate = client.new_certificate(csr) # => #<Acme::Client::Certificate ....>
 
     # Send certificates to Heroku via API
-    
+
     # First check for existing certificates:
     certificates = heroku.sni_endpoint.list(heroku_app)
 
