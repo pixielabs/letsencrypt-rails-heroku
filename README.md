@@ -129,12 +129,12 @@ Source: [blog.dbrgn.ch](https://blog.dbrgn.ch/2013/10/4/heroku-schedule-weekly-m
 Suggestions and pull requests are welcome in improving the situation with the
 following security considerations:
 
- - When configuring this gem you are baking a non-expiring Heroku API token
-   into your applications environment. Your collaborators could use this
+ - When configuring this gem you must add a non-expiring Heroku API token
+   into your application environment. Your collaborators could use this
    token to impersonate the account it was created with when accessing
    the Heroku API. This is important if your account has access to other apps
-   that your collaborators don’t. Additionally, if your application’s environment was
-   leaked this would give access to the Heroku API as your user account. 
+   that your collaborators don’t. Additionally, if your application environment was
+   leaked this would give the attacker access to the Heroku API as your user account. 
    [More information about Heroku’s API and oAuth](https://devcenter.heroku.com/articles/oauth#direct-authorization).
 
    You should create the API token from a suitably locked-down account.
@@ -153,7 +153,7 @@ following security considerations:
   we don’t register with LetsEncrypt over and over.
 
 - Stop using a fork of the `platform-api` gem once it supports the SNI endpoint
-  API calls.
+  API calls. [See issue #49 of the platform-api gem](https://github.com/heroku/platform-api/issues/49).
 
 - Provide instructions for running the gem decoupled from the app it is 
   securing, for the paranoid.
