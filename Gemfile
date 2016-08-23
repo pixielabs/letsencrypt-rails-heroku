@@ -1,5 +1,8 @@
 source "https://rubygems.org"
 
+# allow redirect from HTTP to HTTPS
+gem 'open_uri_w_redirect_to_https'
+
 gem 'acme-client', '~> 0.4'
 # SNI endpoints not supported yet:
 # <https://github.com/heroku/platform-api/issues/49>

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 require 'open-uri'
+require 'open_uri_w_redirect_to_https'
 require 'openssl'
 require 'acme-client'
 require 'platform-api'
@@ -53,7 +54,7 @@ namespace :letsencrypt do
 
       # Get the domain name from Heroku
       hostname = heroku.domain.list(heroku_app).first['hostname']
-      open("http://#{hostname}/#{challenge.filename}").read
+      open("http://#{hostname}/#{challenge.filename}", redirect_to_https: true).read
       puts "Done!"
 
       print "Giving LetsEncrypt some time to verify..."
