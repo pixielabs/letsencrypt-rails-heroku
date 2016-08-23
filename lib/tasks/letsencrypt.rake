@@ -66,7 +66,7 @@ namespace :letsencrypt do
       puts "Done!"
 
       unless challenge.verify_status == 'valid'
-        abort "Problem with verifying challenge: status=#{challenge.verify_status} - error=#{challenge.error}"
+        abort "Status: #{challenge.verify_status}, Error: #{challenge.error}"
       end
 
       puts ""
