@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 require 'open-uri'
-require 'open_uri_w_redirect_to_https'
 require 'openssl'
 require 'acme-client'
 require 'platform-api'
