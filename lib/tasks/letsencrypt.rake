@@ -47,7 +47,7 @@ namespace :letsencrypt do
 
       # Wait for request to go through
       print "Giving config vars time to change..."
-      sleep(5)
+      sleep(7)
       puts "Done!"
 
       # Wait for app to come up
@@ -55,7 +55,11 @@ namespace :letsencrypt do
 
       # Get the domain name from Heroku
       hostname = heroku.domain.list(heroku_app).first['hostname']
-      open("http://#{hostname}/#{challenge.filename}").read
+      body_content = open("http://#{hostname}/#{challenge.filename}").read
+      while body_content != challenge.file_content
+        sleep(2)
+        body_content = open("http://#{hostname}/#{challenge.filename}").read
+      end
       puts "Done!"
 
       print "Giving LetsEncrypt some time to verify..."
