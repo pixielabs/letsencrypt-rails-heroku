@@ -19,7 +19,7 @@ handle renewals and keeping your certificate up to date.
 Add the gem to your Gemfile:
 
 ```
-# Until the API calls are out of beta, you must manually specify my fork
+# Until the new API calls are generally available, you must manually specify my fork
 # of the Heroku API gem:
 gem 'platform-api', github: 'jalada/platform-api', branch: 'master'
 
