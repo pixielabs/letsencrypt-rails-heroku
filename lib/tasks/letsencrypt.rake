@@ -6,7 +6,7 @@ require 'platform-api'
 namespace :letsencrypt do
 
   desc 'Renew your LetsEncrypt certificate'
-  task :renew => :environment do
+  task :renew do
     # Check configuration looks OK
     abort "letsencrypt-rails-heroku is configured incorrectly. Are you missing an environment variable or other configuration? You should have a heroku_token, heroku_app, acmp_email and acme_domain configured either via a `Letsencrypt.configure` block in an initializer or as environment variables." unless Letsencrypt.configuration.valid?
 
