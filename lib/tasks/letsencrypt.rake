@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 require 'open-uri'
-require 'open_uri_w_redirect_to_https'
 require 'openssl'
 require 'acme-client'
 require 'platform-api'
@@ -35,6 +34,8 @@ namespace :letsencrypt do
       puts "Performing verification for #{domain}:"
 
       authorization = client.authorize(domain: domain)
+      next if authorization.status == 'valid'
+
       challenge = authorization.http01
 
       print "Setting config vars on Heroku..."
@@ -46,7 +47,7 @@ namespace :letsencrypt do
 
       # Wait for request to go through
       print "Giving config vars time to change..."
-      sleep(5)
+      sleep(7)
       puts "Done!"
 
       # Wait for app to come up
@@ -54,22 +55,25 @@ namespace :letsencrypt do
 
       # Get the domain name from Heroku
       hostname = heroku.domain.list(heroku_app).first['hostname']
-      open("http://#{hostname}/#{challenge.filename}", redirect_to_https: true).read
+      body_content = open("http://#{hostname}/#{challenge.filename}").read
+      while body_content != challenge.file_content
+        sleep(2)
+        body_content = open("http://#{hostname}/#{challenge.filename}").read
+      end
       puts "Done!"
 
       print "Giving LetsEncrypt some time to verify..."
       # Once you are ready to serve the confirmation request you can proceed.
       challenge.request_verification # => true
-      challenge.verify_status # => 'pending'
 
-      sleep(3)
-      puts "Done!"
+      while challenge.verify_status == 'pending'
+        sleep(1)
+      end
+      puts "Done with status: #{challenge.verify_status}"
 
       unless challenge.verify_status == 'valid'
         abort "Status: #{challenge.verify_status}, Error: #{challenge.error}"
       end
-
-      puts ""
     end
 
     # Unset temporary config vars. We don't care about waiting for this to
