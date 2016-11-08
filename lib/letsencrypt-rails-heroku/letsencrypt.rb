@@ -48,7 +48,7 @@ module Letsencrypt
 
     def valid?
       heroku_token != nil && heroku_app != nil && acme_email != nil &&
-        acme_domain != nil && %w(file dns).includes?(acme_challenge_type)
+        acme_domain != nil && %w(file dns).include?(acme_challenge_type)
     end
   end
 end
