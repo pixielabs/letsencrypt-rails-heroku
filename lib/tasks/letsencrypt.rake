@@ -2,6 +2,7 @@
 require 'open-uri'
 require 'openssl'
 require 'acme-client'
+require 'cloudflare'
 require 'platform-api'
 
 namespace :letsencrypt do
@@ -20,13 +21,27 @@ namespace :letsencrypt do
     private_key = OpenSSL::PKey::RSA.new(4096)
     puts "Done!"
 
-    client = Acme::Client.new(private_key: private_key, endpoint: Letsencrypt.configuration.acme_endpoint, connection_options: { request: { open_timeout: 5, timeout: 5 } })
+    client = Acme::Client.new(
+      private_key: private_key,
+      endpoint: Letsencrypt.configuration.acme_endpoint,
+      connection_options: { request: { open_timeout: 5, timeout: 5 } }
+    )
 
     print "Registering with LetsEncrypt..."
-    registration = client.register(contact: "mailto:#{Letsencrypt.configuration.acme_email}")
+    registration = client.register(
+      contact: "mailto:#{Letsencrypt.configuration.acme_email}"
+    )
 
     registration.agree_terms
     puts "Done!"
+
+    if Letsencrypt.configuration.acme_challenge_type == 'dns'
+      abort 'Missing Cloudflare environment varialbes CLOUDFLARE_API_KEY and CLOUDFLARE_EMAIL' unless LetsEncrypt.challenge_dns_configured?
+      cf = CloudFlare::connection(
+        Letsencrypt.configuration.cloudflare_api_key,
+        Letsencrypt.configuration.cloudflare_email
+      )
+    end
 
     domains = Letsencrypt.configuration.acme_domain.split(',').map(&:strip)
 
@@ -36,52 +51,76 @@ namespace :letsencrypt do
       authorization = client.authorize(domain: domain)
       next if authorization.status == 'valid'
 
-      challenge = authorization.http01
+      if Letsencrypt.configuration.acme_challenge_type == 'dns'
+        begin
+          print "Creating Cloudflare DNS record for domain: #{domain}..."
+          cf.rec_new(domain,
+                     'TXT',
+                     "_acme-challenge.#{single_domain}",
+                     challenge.record_content,
+                     1)
+          puts "Done!"
+        rescue => e
+          puts "Fail creating DNS record, reason: #{e.message}"
+        end
+        puts 'Sleeping for 1 minute while we wait for DNS to propagate.'
+        sleep(60)
+        challenge.request_verification
+        print "Giving LetsEncrypt some time to verify..."
+        while challenge.verify_status == 'pending'
+          sleep(1)
+        end
+        puts "Done with status: #{challenge.verify_status}"
+      elsif Letsencrypt.configuration.acme_challenge_type == 'file'
+        challenge = authorization.http01
 
-      print "Setting config vars on Heroku..."
-      heroku.config_var.update(heroku_app, {
-        'ACME_CHALLENGE_FILENAME' => challenge.filename,
-        'ACME_CHALLENGE_FILE_CONTENT' => challenge.file_content
-      })
-      puts "Done!"
+        print "Setting config vars on Heroku..."
+        heroku.config_var.update(heroku_app, {
+          'ACME_CHALLENGE_FILENAME' => challenge.filename,
+          'ACME_CHALLENGE_FILE_CONTENT' => challenge.file_content
+        })
+        puts "Done!"
 
-      # Wait for request to go through
-      print "Giving config vars time to change..."
-      sleep(7)
-      puts "Done!"
+        # Wait for request to go through
+        print "Giving config vars time to change..."
+        sleep(7)
+        puts "Done!"
 
-      # Wait for app to come up
-      print "Testing filename works (to bring up app)..."
+        # Wait for app to come up
+        print "Testing filename works (to bring up app)..."
 
-      # Get the domain name from Heroku
-      hostname = heroku.domain.list(heroku_app).first['hostname']
-      body_content = open("http://#{hostname}/#{challenge.filename}").read
-      while body_content != challenge.file_content
-        sleep(2)
+        # Get the domain name from Heroku
+        hostname = heroku.domain.list(heroku_app).first['hostname']
         body_content = open("http://#{hostname}/#{challenge.filename}").read
-      end
-      puts "Done!"
+        while body_content != challenge.file_content
+          sleep(2)
+          body_content = open("http://#{hostname}/#{challenge.filename}").read
+        end
+        puts "Done!"
 
-      print "Giving LetsEncrypt some time to verify..."
-      # Once you are ready to serve the confirmation request you can proceed.
-      challenge.request_verification # => true
+        print "Giving LetsEncrypt some time to verify..."
+        # Once you are ready to serve the confirmation request you can proceed.
+        challenge.request_verification # => true
 
-      while challenge.verify_status == 'pending'
-        sleep(1)
+        while challenge.verify_status == 'pending'
+          sleep(1)
+        end
+        puts "Done with status: #{challenge.verify_status}"
       end
-      puts "Done with status: #{challenge.verify_status}"
 
       unless challenge.verify_status == 'valid'
         abort "Status: #{challenge.verify_status}, Error: #{challenge.error}"
       end
     end
 
-    # Unset temporary config vars. We don't care about waiting for this to
-    # restart
-    heroku.config_var.update(heroku_app, {
-      'ACME_CHALLENGE_FILENAME' => nil,
-      'ACME_CHALLENGE_FILE_CONTENT' => nil
-    })
+    if Letsencrypt.configuration.acme_challenge_type == 'file'
+      # Unset temporary config vars. We don't care about waiting for this to
+      # restart
+      heroku.config_var.update(heroku_app, {
+        'ACME_CHALLENGE_FILENAME' => nil,
+        'ACME_CHALLENGE_FILE_CONTENT' => nil
+      })
+    end
 
     # Create CSR
     csr = Acme::Client::CertificateRequest.new(names: domains)
