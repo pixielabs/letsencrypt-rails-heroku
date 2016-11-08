@@ -36,7 +36,7 @@ namespace :letsencrypt do
     puts "Done!"
 
     if Letsencrypt.configuration.acme_challenge_type == 'dns'
-      abort 'Missing Cloudflare environment varialbes CLOUDFLARE_API_KEY and CLOUDFLARE_EMAIL' unless LetsEncrypt.challenge_dns_configured?
+      abort 'Missing Cloudflare environment varialbes CLOUDFLARE_API_KEY and CLOUDFLARE_EMAIL' unless Letsencrypt.challenge_dns_configured?
       cf = CloudFlare::connection(
         Letsencrypt.configuration.cloudflare_api_key,
         Letsencrypt.configuration.cloudflare_email
