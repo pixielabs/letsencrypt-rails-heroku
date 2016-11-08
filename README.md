@@ -9,14 +9,7 @@ handle renewals and keeping your certificate up to date.
 
 ## Requirements
 
- - Whilst it is in beta, you must use the labs feature to enable Heroku's free
-   SSL offering:
-
-   ```
-   heroku labs:enable http-sni
-   ```
-
- - You must be using hobby or professional dynos to use free SNI-based SSL.
+ - You must be using hobby or professional dynos to use free SNI-based SSL. Find out more on [Heroku's documentation page about SSL](https://devcenter.heroku.com/articles/ssl).
 
  - You should have already configured your app DNS as per [Heroku's
    documentation](https://devcenter.heroku.com/articles/custom-domains).
@@ -26,7 +19,7 @@ handle renewals and keeping your certificate up to date.
 Add the gem to your Gemfile:
 
 ```
-# Until the API calls are out of beta, you must manually specify my fork
+# Until the new API calls are generally available, you must manually specify my fork
 # of the Heroku API gem:
 gem 'platform-api', github: 'jalada/platform-api', branch: 'master'
 
