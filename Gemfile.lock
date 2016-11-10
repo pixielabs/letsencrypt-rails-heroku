@@ -19,9 +19,12 @@ GEM
     addressable (2.4.0)
     builder (3.2.2)
     concurrent-ruby (1.0.2)
+    curb (0.9.3)
     descendants_tracker (0.0.4)
       thread_safe (~> 0.3, >= 0.3.1)
     docile (1.1.5)
+    domain_name (0.5.20161021)
+      unf (>= 0.0.5, < 1.0.0)
     erubis (2.7.0)
     excon (0.51.0)
     faraday (0.9.2)
@@ -75,6 +78,8 @@ GEM
     rake (11.2.2)
     rdoc (3.12.2)
       json (~> 1.4)
+    rubyflare (0.2.0)
+      curb (~> 0.9.3)
     semver (1.0.1)
     shoulda (3.5.0)
       shoulda-context (~> 1.0, >= 1.0.1)
@@ -90,6 +95,9 @@ GEM
     thread_safe (0.3.5)
     tzinfo (1.2.2)
       thread_safe (~> 0.1)
+    unf (0.1.4)
+      unf_ext
+    unf_ext (0.0.7.2)
 
 PLATFORMS
   ruby
@@ -97,9 +105,11 @@ PLATFORMS
 DEPENDENCIES
   acme-client (~> 0.4.1)
   bundler (~> 1.0)
+  domain_name
   juwelier (~> 2.1.0)
   platform-api!
   rdoc (~> 3.12)
+  rubyflare
   shoulda
   simplecov
 

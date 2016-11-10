@@ -6,7 +6,8 @@ gem 'acme-client', '~> 0.4.1'
 gem 'platform-api', github: 'jalada/platform-api', branch: 'master'
 
 # ACME Challenge using DNS
-gem 'cloudflare'
+gem 'rubyflare'
+gem 'domain_name'
 
 group :development do
   gem "shoulda", ">= 0"

@@ -2,7 +2,6 @@
 require 'open-uri'
 require 'openssl'
 require 'acme-client'
-require 'cloudflare'
 require 'platform-api'
 
 namespace :letsencrypt do
@@ -35,14 +34,6 @@ namespace :letsencrypt do
     registration.agree_terms
     puts "Done!"
 
-    if Letsencrypt.configuration.acme_challenge_type == 'dns'
-      abort 'Missing Cloudflare environment varialbes CLOUDFLARE_API_KEY and CLOUDFLARE_EMAIL' unless Letsencrypt.challenge_dns_configured?
-      cf = CloudFlare::connection(
-        Letsencrypt.configuration.cloudflare_api_key,
-        Letsencrypt.configuration.cloudflare_email
-      )
-    end
-
     domains = Letsencrypt.configuration.acme_domain.split(',').map(&:strip)
 
     domains.each do |domain|
@@ -51,27 +42,9 @@ namespace :letsencrypt do
       authorization = client.authorize(domain: domain)
       next if authorization.status == 'valid'
 
-      if Letsencrypt.configuration.acme_challenge_type == 'dns'
-        begin
-          print "Creating Cloudflare DNS record for domain: #{domain}..."
-          cf.rec_new(domain,
-                     'TXT',
-                     "_acme-challenge.#{single_domain}",
-                     challenge.record_content,
-                     1)
-          puts "Done!"
-        rescue => e
-          puts "Fail creating DNS record, reason: #{e.message}"
-        end
-        puts 'Sleeping for 1 minute while we wait for DNS to propagate.'
-        sleep(60)
-        challenge.request_verification
-        print "Giving LetsEncrypt some time to verify..."
-        while challenge.verify_status == 'pending'
-          sleep(1)
-        end
-        puts "Done with status: #{challenge.verify_status}"
-      elsif Letsencrypt.configuration.acme_challenge_type == 'file'
+      challenge = if Letsencrypt.configuration.acme_challenge_type == 'dns'
+        Letsencrypt.challenge_dns_for(domain, authorization)
+      else
         challenge = authorization.http01
 
         print "Setting config vars on Heroku..."
@@ -106,6 +79,7 @@ namespace :letsencrypt do
           sleep(1)
         end
         puts "Done with status: #{challenge.verify_status}"
+        challenge
       end
 
       unless challenge.verify_status == 'valid'
