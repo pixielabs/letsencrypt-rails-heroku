@@ -56,7 +56,7 @@ module Letsencrypt
     sleep(60)
     challenge.request_verification
     print "Giving LetsEncrypt some time to verify..."
-    while challenge.verify_status == 'pending'
+    while challenge.authorization.verify_status == 'pending'
       sleep(1)
     end
     puts "Done with status: #{challenge.verify_status}"

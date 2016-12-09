@@ -9,7 +9,7 @@ GIT
 GEM
   remote: https://rubygems.org/
   specs:
-    acme-client (0.4.1)
+    acme-client (0.5.0)
       faraday (~> 0.9, >= 0.9.1)
     activesupport (5.0.0)
       concurrent-ruby (~> 1.0, >= 1.0.2)
@@ -23,7 +23,7 @@ GEM
     descendants_tracker (0.0.4)
       thread_safe (~> 0.3, >= 0.3.1)
     docile (1.1.5)
-    domain_name (0.5.20161021)
+    domain_name (0.5.20161129)
       unf (>= 0.0.5, < 1.0.0)
     erubis (2.7.0)
     excon (0.51.0)
@@ -75,7 +75,7 @@ GEM
       rack (~> 1.2)
     pkg-config (1.1.7)
     rack (1.6.4)
-    rake (11.2.2)
+    rake (12.0.0)
     rdoc (3.12.2)
       json (~> 1.4)
     rubyflare (0.2.0)
@@ -103,7 +103,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  acme-client (~> 0.4.1)
+  acme-client (>= 0.5.0)
   bundler (~> 1.0)
   domain_name
   juwelier (~> 2.1.0)

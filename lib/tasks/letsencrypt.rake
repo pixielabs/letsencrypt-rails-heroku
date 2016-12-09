@@ -75,15 +75,15 @@ namespace :letsencrypt do
         # Once you are ready to serve the confirmation request you can proceed.
         challenge.request_verification # => true
 
-        while challenge.verify_status == 'pending'
+        while challenge.authorization.verify_status == 'pending'
           sleep(1)
         end
         puts "Done with status: #{challenge.verify_status}"
         challenge
       end
 
-      unless challenge.verify_status == 'valid'
-        abort "Status: #{challenge.verify_status}, Error: #{challenge.error}"
+      unless challenge.authorization.verify_status == 'valid'
+        abort "Status: #{challenge.authorization.verify_status}, Error: #{challenge.error}"
       end
     end
 
