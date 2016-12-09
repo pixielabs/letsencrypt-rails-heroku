@@ -1,9 +1,13 @@
 source "https://rubygems.org"
 
-gem 'acme-client', '~> 0.4.0'
+gem 'acme-client', '>= 0.5.0'
 # SNI endpoints not supported yet:
 # <https://github.com/heroku/platform-api/issues/49>
 gem 'platform-api', github: 'jalada/platform-api', branch: 'master'
+
+# ACME Challenge using DNS
+gem 'rubyflare'
+gem 'domain_name'
 
 group :development do
   gem "shoulda", ">= 0"

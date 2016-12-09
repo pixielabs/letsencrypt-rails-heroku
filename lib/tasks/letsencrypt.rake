@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 require 'open-uri'
 require 'openssl'
 require 'acme-client'
@@ -19,10 +20,16 @@ namespace :letsencrypt do
     private_key = OpenSSL::PKey::RSA.new(4096)
     puts "Done!"
 
-    client = Acme::Client.new(private_key: private_key, endpoint: Letsencrypt.configuration.acme_endpoint, connection_options: { request: { open_timeout: 5, timeout: 5 } })
+    client = Acme::Client.new(
+      private_key: private_key,
+      endpoint: Letsencrypt.configuration.acme_endpoint,
+      connection_options: { request: { open_timeout: 5, timeout: 5 } }
+    )
 
     print "Registering with LetsEncrypt..."
-    registration = client.register(contact: "mailto:#{Letsencrypt.configuration.acme_email}")
+    registration = client.register(
+      contact: "mailto:#{Letsencrypt.configuration.acme_email}"
+    )
 
     registration.agree_terms
     puts "Done!"
@@ -33,50 +40,61 @@ namespace :letsencrypt do
       puts "Performing verification for #{domain}:"
 
       authorization = client.authorize(domain: domain)
-      challenge = authorization.http01
+      next if authorization.status == 'valid'
 
-      print "Setting config vars on Heroku..."
-      heroku.config_var.update(heroku_app, {
-        'ACME_CHALLENGE_FILENAME' => challenge.filename,
-        'ACME_CHALLENGE_FILE_CONTENT' => challenge.file_content
-      })
-      puts "Done!"
+      challenge = if Letsencrypt.configuration.acme_challenge_type == 'dns'
+        Letsencrypt.challenge_dns_for(domain, authorization)
+      else
+        challenge = authorization.http01
 
-      # Wait for request to go through
-      print "Giving config vars time to change..."
-      sleep(5)
-      puts "Done!"
+        print "Setting config vars on Heroku..."
+        heroku.config_var.update(heroku_app, {
+          'ACME_CHALLENGE_FILENAME' => challenge.filename,
+          'ACME_CHALLENGE_FILE_CONTENT' => challenge.file_content
+        })
+        puts "Done!"
 
-      # Wait for app to come up
-      print "Testing filename works (to bring up app)..."
+        # Wait for request to go through
+        print "Giving config vars time to change..."
+        sleep(7)
+        puts "Done!"
 
-      # Get the domain name from Heroku
-      hostname = heroku.domain.list(heroku_app).first['hostname']
-      open("http://#{hostname}/#{challenge.filename}").read
-      puts "Done!"
+        # Wait for app to come up
+        print "Testing filename works (to bring up app)..."
 
-      print "Giving LetsEncrypt some time to verify..."
-      # Once you are ready to serve the confirmation request you can proceed.
-      challenge.request_verification # => true
-      challenge.verify_status # => 'pending'
+        # Get the domain name from Heroku
+        hostname = heroku.domain.list(heroku_app).first['hostname']
+        body_content = open("http://#{hostname}/#{challenge.filename}").read
+        while body_content != challenge.file_content
+          sleep(2)
+          body_content = open("http://#{hostname}/#{challenge.filename}").read
+        end
+        puts "Done!"
 
-      sleep(3)
-      puts "Done!"
+        print "Giving LetsEncrypt some time to verify..."
+        # Once you are ready to serve the confirmation request you can proceed.
+        challenge.request_verification # => true
 
-      unless challenge.verify_status == 'valid'
-        puts "Problem verifying challenge."
-        abort "Status: #{challenge.verify_status}, Error: #{challenge.error}"
+        while challenge.authorization.verify_status == 'pending'
+          sleep(1)
+        end
+        puts "Done with status: #{challenge.verify_status}"
+        challenge
       end
 
-      puts ""
+      unless challenge.authorization.verify_status == 'valid'
+        abort "Status: #{challenge.authorization.verify_status}, Error: #{challenge.error}"
+      end
     end
 
-    # Unset temporary config vars. We don't care about waiting for this to
-    # restart
-    heroku.config_var.update(heroku_app, {
-      'ACME_CHALLENGE_FILENAME' => nil,
-      'ACME_CHALLENGE_FILE_CONTENT' => nil
-    })
+    if Letsencrypt.configuration.acme_challenge_type == 'file'
+      # Unset temporary config vars. We don't care about waiting for this to
+      # restart
+      heroku.config_var.update(heroku_app, {
+        'ACME_CHALLENGE_FILENAME' => nil,
+        'ACME_CHALLENGE_FILE_CONTENT' => nil
+      })
+    end
 
     # Create CSR
     csr = Acme::Client::CertificateRequest.new(names: domains)
@@ -85,7 +103,7 @@ namespace :letsencrypt do
     certificate = client.new_certificate(csr) # => #<Acme::Client::Certificate ....>
 
     # Send certificates to Heroku via API
-    
+
     # First check for existing certificates:
     certificates = heroku.sni_endpoint.list(heroku_app)
 
