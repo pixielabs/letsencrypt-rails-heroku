@@ -93,7 +93,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  acme-client (~> 0.4.0)
+  acme-client (~> 0.4.1)
   bundler (~> 1.0)
   juwelier (~> 2.1.0)
   platform-api!
