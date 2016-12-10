@@ -9,9 +9,9 @@ module Letsencrypt
   end
 
   def self.challenge_configured?
-    configuration.acme_challenge_filename.present? && 
-      configuration.acme_challenge_filename.starts_with?(".well-known/") &&
-      configuration.acme_challenge_file_content.present?
+    configuration.acme_challenge_filename && 
+      configuration.acme_challenge_filename.start_with?(".well-known/") &&
+      configuration.acme_challenge_file_content
   end
 
   class Configuration
@@ -25,14 +25,13 @@ module Letsencrypt
       @heroku_app = ENV["HEROKU_APP"]
       @acme_email = ENV["ACME_EMAIL"]
       @acme_domain = ENV["ACME_DOMAIN"]
-      @acme_endpoint = ENV["ACME_ENDPOINT"].presence || 'https://acme-v01.api.letsencrypt.org/'
+      @acme_endpoint = ENV["ACME_ENDPOINT"] || 'https://acme-v01.api.letsencrypt.org/'
       @acme_challenge_filename = ENV["ACME_CHALLENGE_FILENAME"]
       @acme_challenge_file_content = ENV["ACME_CHALLENGE_FILE_CONTENT"]
     end
 
     def valid?
-      heroku_token.present? && heroku_app.present? && acme_email.present? &&
-        acme_domain.present?
+      heroku_token && heroku_app && acme_email && acme_domain
     end
   end
 end
