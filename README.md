@@ -6,6 +6,11 @@ This gem is a complete solution for securing your Ruby on Rails application
 on Heroku using their free SNI-based SSL and LetsEncrypt. It will automatically
 handle renewals and keeping your certificate up to date.
 
+With some extra steps, this gem can also be used with Sinatra. For an example
+of how to do this, see the
+[letsencrypt-rails-heroku-sinatra-example](https://github.com/pixielabs/letsencrypt-rails-heroku-sinatra-example)
+repository.
+
 
 ## Requirements
 
