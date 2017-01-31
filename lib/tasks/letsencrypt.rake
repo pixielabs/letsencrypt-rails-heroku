@@ -10,6 +10,8 @@ namespace :letsencrypt do
     # Check configuration looks OK
     abort "letsencrypt-rails-heroku is configured incorrectly. Are you missing an environment variable or other configuration? You should have a heroku_token, heroku_app, acmp_email and acme_domain configured either via a `Letsencrypt.configure` block in an initializer or as environment variables." unless Letsencrypt.configuration.valid?
 
+    SLEEP_TIME = ENV.has_key?('LETSENCRYPT_RENEW_SLEEP_TIME') ? ENV['LETSENCRYPT_RENEW_SLEEP_TIME'].to_i : 5
+
     # Set up Heroku client
     heroku = PlatformAPI.connect_oauth Letsencrypt.configuration.heroku_token
     heroku_app = Letsencrypt.configuration.heroku_app
@@ -44,7 +46,7 @@ namespace :letsencrypt do
 
       # Wait for request to go through
       print "Giving config vars time to change..."
-      sleep(5)
+      sleep(SLEEP_TIME)
       puts "Done!"
 
       # Wait for app to come up
@@ -60,7 +62,7 @@ namespace :letsencrypt do
       challenge.request_verification # => true
       challenge.verify_status # => 'pending'
 
-      sleep(3)
+      sleep(SLEEP_TIME)
       puts "Done!"
 
       unless challenge.verify_status == 'valid'
@@ -85,7 +87,7 @@ namespace :letsencrypt do
     certificate = client.new_certificate(csr) # => #<Acme::Client::Certificate ....>
 
     # Send certificates to Heroku via API
-    
+
     # First check for existing certificates:
     certificates = heroku.sni_endpoint.list(heroku_app)
 
