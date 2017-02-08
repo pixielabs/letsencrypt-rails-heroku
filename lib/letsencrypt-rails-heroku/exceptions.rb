@@ -3,6 +3,6 @@ module Letsencrypt
     # Exception raised when LetsEncrypt encounters an issue verifying the challenge.
     class VerificationError < StandardError; end
     # Exception raised when an error occurs adding the certificate to Heroku.
-    class HerokuCertError < StandardError; end
+    class HerokuCertificateError < StandardError; end
   end
 end
