@@ -51,7 +51,7 @@ namespace :letsencrypt do
       print "Testing filename works (to bring up app)..."
 
       # Get the domain name from Heroku
-      hostname = heroku.domain.list(heroku_app).first['hostname']
+      hostname = heroku.domain.list(heroku_app).last['hostname']
       open("http://#{hostname}/#{challenge.filename}").read
       puts "Done!"
 
