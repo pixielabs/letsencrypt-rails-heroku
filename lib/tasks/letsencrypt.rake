@@ -69,7 +69,16 @@ namespace :letsencrypt do
       challenge.request_verification # => true
       challenge.verify_status # => 'pending'
 
-      sleep(3)
+      start_time = Time.now
+
+      while challenge.verify_status == 'pending'
+        if Time.now - start_time >= 30
+          failure_message = "Failed - timed out waiting for challenge verification."
+          raise Letsencrypt::Error::VerificationTimeoutError, failure_message
+        end
+        sleep(3)
+      end
+
       puts "Done!"
 
       unless challenge.verify_status == 'valid'
@@ -117,7 +126,7 @@ namespace :letsencrypt do
       end
     rescue Excon::Error::UnprocessableEntity => e
       warn "Error adding certificate to Heroku. Response from Heroku’s API follows:"
-      raise Letsencrypt::Error::HerokuCertError, e.response.body
+      raise Letsencrypt::Error::HerokuCertificateError, e.response.body
     end
 
   end
