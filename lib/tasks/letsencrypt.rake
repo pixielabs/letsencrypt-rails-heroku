@@ -117,7 +117,7 @@ namespace :letsencrypt do
       end
     rescue Excon::Error::UnprocessableEntity => e
       warn "Error adding certificate to Heroku. Response from Heroku’s API follows:"
-      raise Letsencrypt::Error::HerokuCertError, e.response.body
+      raise Letsencrypt::Error::HerokuCertificateError, e.response.body
     end
 
   end
