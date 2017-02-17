@@ -8,7 +8,7 @@ namespace :letsencrypt do
   desc 'Renew your LetsEncrypt certificate'
   task :renew do
     # Check configuration looks OK
-    abort "letsencrypt-rails-heroku is configured incorrectly. Are you missing an environment variable or other configuration? You should have a heroku_token, heroku_app, acmp_email and acme_domain configured either via a `Letsencrypt.configure` block in an initializer or as environment variables." unless Letsencrypt.configuration.valid?
+    abort "letsencrypt-rails-heroku is configured incorrectly. Are you missing an environment variable or other configuration? You should have a heroku_token, heroku_app, acme_email and acme_domain configured either via a `Letsencrypt.configure` block in an initializer or as environment variables." unless Letsencrypt.configuration.valid?
 
     # Set up Heroku client
     heroku = PlatformAPI.connect_oauth Letsencrypt.configuration.heroku_token
@@ -65,7 +65,8 @@ namespace :letsencrypt do
 
       unless challenge.verify_status == 'valid'
         puts "Problem verifying challenge."
-        abort "Status: #{challenge.verify_status}, Error: #{challenge.error}"
+        failure_message = "Status: #{challenge.verify_status}, Error: #{challenge.error}"
+        raise Letsencrypt::Error::VerificationError, failure_message
       end
 
       puts ""
@@ -85,7 +86,7 @@ namespace :letsencrypt do
     certificate = client.new_certificate(csr) # => #<Acme::Client::Certificate ....>
 
     # Send certificates to Heroku via API
-    
+
     # First check for existing certificates:
     certificates = heroku.sni_endpoint.list(heroku_app)
 
@@ -107,7 +108,7 @@ namespace :letsencrypt do
       end
     rescue Excon::Error::UnprocessableEntity => e
       warn "Error adding certificate to Heroku. Response from Heroku’s API follows:"
-      abort e.response.body
+      raise Letsencrypt::Error::HerokuCertificateError, e.response.body
     end
 
   end
