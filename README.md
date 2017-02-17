@@ -159,6 +159,12 @@ following security considerations:
 
    The gem performs some cursory checks to make sure the filename is roughly
    what is expected to try and mitigate this.
+   
+## Troubleshooting
+
+### Common name invalid errors (security certificate is from *.herokuapp.com)
+
+Your domain is still configured as a CNAME or ALIAS to `your-app.herokuapp.com`. Check the output of `heroku domains` matches your DNS configuration. When you add an SNI cert to an app for the first time [the DNS target changes](https://devcenter.heroku.com/articles/custom-domains#view-existing-domains).
 
 ## To-do list
 
