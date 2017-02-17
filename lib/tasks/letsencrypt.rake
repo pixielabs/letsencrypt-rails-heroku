@@ -42,17 +42,30 @@ namespace :letsencrypt do
       })
       puts "Done!"
 
-      # Wait for request to go through
-      print "Giving config vars time to change..."
-      sleep(5)
-      puts "Done!"
-
       # Wait for app to come up
       print "Testing filename works (to bring up app)..."
 
       # Get the domain name from Heroku
       hostname = heroku.domain.list(heroku_app).first['hostname']
-      open("http://#{hostname}/#{challenge.filename}").read
+      
+      # Wait at least a little bit, otherwise the first request will almost always fail.
+      sleep(2)
+
+      start_time = Time.now
+
+      begin
+        open("http://#{hostname}/#{challenge.filename}").read
+      rescue OpenURI::HTTPError => e
+        if Time.now - start_time <= 30
+          puts "Error fetching challenge, retrying... #{e.message}"
+          sleep(5)
+          retry
+        else
+          failure_message = "Error waiting for response from http://#{hostname}/#{challenge.filename}, Error: #{e.message}"
+          raise Letsencrypt::Error::ChallengeUrlError, failure_message
+        end
+      end
+
       puts "Done!"
 
       print "Giving LetsEncrypt some time to verify..."
