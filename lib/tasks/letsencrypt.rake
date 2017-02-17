@@ -42,16 +42,27 @@ namespace :letsencrypt do
       })
       puts "Done!"
 
-      # Wait for request to go through
-      print "Giving config vars time to change..."
-      sleep(5)
-      puts "Done!"
-
       # Wait for app to come up
       print "Testing filename works (to bring up app)..."
+      
+      # Wait at least a little bit, otherwise the first request will almost always fail.
+      sleep(2)
 
-      # Open challenge url
-      open("http://#{domain}/#{challenge.filename}").read
+      start_time = Time.now
+
+      begin
+        open("http://#{domain}/#{challenge.filename}").read
+      rescue OpenURI::HTTPError => e
+        if Time.now - start_time <= 30
+          puts "Error fetching challenge, retrying... #{e.message}"
+          sleep(5)
+          retry
+        else
+          failure_message = "Error waiting for response from http://#{domain}/#{challenge.filename}, Error: #{e.message}"
+          raise Letsencrypt::Error::ChallengeUrlError, failure_message
+        end
+      end
+
       puts "Done!"
 
       print "Giving LetsEncrypt some time to verify..."
@@ -59,7 +70,16 @@ namespace :letsencrypt do
       challenge.request_verification # => true
       challenge.verify_status # => 'pending'
 
-      sleep(3)
+      start_time = Time.now
+
+      while challenge.verify_status == 'pending'
+        if Time.now - start_time >= 30
+          failure_message = "Failed - timed out waiting for challenge verification."
+          raise Letsencrypt::Error::VerificationTimeoutError, failure_message
+        end
+        sleep(3)
+      end
+
       puts "Done!"
 
       unless challenge.verify_status == 'valid'
@@ -107,7 +127,7 @@ namespace :letsencrypt do
       end
     rescue Excon::Error::UnprocessableEntity => e
       warn "Error adding certificate to Heroku. Response from Heroku’s API follows:"
-      raise Letsencrypt::Error::HerokuCertError, e.response.body
+      raise Letsencrypt::Error::HerokuCertificateError, e.response.body
     end
 
   end
