@@ -10,6 +10,8 @@ namespace :letsencrypt do
     # Check configuration looks OK
     abort "letsencrypt-rails-heroku is configured incorrectly. Are you missing an environment variable or other configuration? You should have a heroku_token, heroku_app, acme_email and acme_domain configured either via a `Letsencrypt.configure` block in an initializer or as environment variables." unless Letsencrypt.configuration.valid?
 
+    abort "The Letsencrypt middleware is not loaded" unless Letsencrypt.configuration.middleware_loaded?
+
     # Set up Heroku client
     heroku = PlatformAPI.connect_oauth Letsencrypt.configuration.heroku_token
     heroku_app = Letsencrypt.configuration.heroku_app
