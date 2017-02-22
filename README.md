@@ -67,6 +67,9 @@ which you should set.
    certificates, e.g. `example.com,www.example.com`. Your Heroku app should be
    configured to answer to all these domains, because LetsEncrypt will make a
    request to verify ownership.
+
+   If you leave this blank, the gem will try and use the Heroku API to get a 
+   list of configured domains for your app, and verify all of them.
  * `ACME_EMAIL`: Your email address, should be valid.
  * `HEROKU_TOKEN`: An API token for this app. See below
  * `HEROKU_APP`: Name of Heroku app e.g. bottomless-cavern-7173
