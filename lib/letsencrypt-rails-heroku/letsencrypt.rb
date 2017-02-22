@@ -31,7 +31,7 @@ module Letsencrypt
     end
 
     def valid?
-      heroku_token && heroku_app && acme_email && acme_domain
+      heroku_token && heroku_app && acme_email
     end
   end
 end

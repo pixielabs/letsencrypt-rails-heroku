@@ -8,7 +8,7 @@ namespace :letsencrypt do
   desc 'Renew your LetsEncrypt certificate'
   task :renew do
     # Check configuration looks OK
-    abort "letsencrypt-rails-heroku is configured incorrectly. Are you missing an environment variable or other configuration? You should have a heroku_token, heroku_app, acme_email and acme_domain configured either via a `Letsencrypt.configure` block in an initializer or as environment variables." unless Letsencrypt.configuration.valid?
+    abort "letsencrypt-rails-heroku is configured incorrectly. Are you missing an environment variable or other configuration? You should have a heroku_token, heroku_app and acme_email configured either via a `Letsencrypt.configure` block in an initializer or as environment variables." unless Letsencrypt.configuration.valid?
 
     # Set up Heroku client
     heroku = PlatformAPI.connect_oauth Letsencrypt.configuration.heroku_token
@@ -27,7 +27,14 @@ namespace :letsencrypt do
     registration.agree_terms
     puts "Done!"
 
-    domains = Letsencrypt.configuration.acme_domain.split(',').map(&:strip)
+    domains = []
+    if Letsencrypt.configuration.acme_domain
+      puts "Using ACME_DOMAIN configuration variable..."
+      domains = Letsencrypt.configuration.acme_domain.split(',').map(&:strip)
+    else
+      domains = heroku.domain.list(heroku_app).map{|domain| domain['hostname']}
+      puts "Using #{domains.length} configured Heroku domain(s) for this app..."
+    end
 
     domains.each do |domain|
       puts "Performing verification for #{domain}:"
