@@ -1,3 +1,9 @@
+# 1.1.0
+
+ - Make `ACME_DOMAIN` optional by using the Heroku API to get a full list of
+   configured domains for the app. Useful for apps with lots of domains.
+   Configuring `ACME_DOMAIN` is still supported.
+
 # 1.0.0
 
 The major version bump reflects the backwards-incompatible change around how
