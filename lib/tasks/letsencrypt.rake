@@ -53,10 +53,18 @@ namespace :letsencrypt do
       print "Testing filename works (to bring up app)..."
 
       # Get the domain name from Heroku
-      heroku_domains = heroku.domain.list(heroku_app)
-      heroku_domain = heroku_domains.find { |heroku_domain_i| !heroku_domain_i["hostname"].start_with?("*.") }
-      raise "Couldn't find domain on Heroku that wasn't a wildcard: #{heroku_domains}" unless heroku_domain
-      hostname = heroku_domain["hostname"]
+      if Letsencrypt.configuration.heroku_app_domain
+        puts "Using hostname from HEROKU_APP_DOMAIN environment variable"
+        hostname = Letsencrypt.configuration.heroku_app_domain
+      else
+        puts "Trying to guess hostname from registered app domains"
+        heroku_domains = heroku.domain.list(heroku_app)
+        heroku_domain = heroku_domains.find { |heroku_domain_i| !heroku_domain_i["hostname"].start_with?("*.") }
+        raise "Couldn't find domain on Heroku that wasn't a wildcard: #{heroku_domains}" unless heroku_domain
+        hostname = heroku_domain["hostname"]
+      end
+
+      puts "Using hostname: #{hostname}"
 
       # Wait at least a little bit, otherwise the first request will almost always fail.
       sleep(2)
