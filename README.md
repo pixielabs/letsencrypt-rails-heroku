@@ -196,3 +196,9 @@ Your domain is still configured as a CNAME or ALIAS to `your-app.herokuapp.com`.
 - Please try not to mess with the Rakefile, version, or history. If you want to
   have your own version, or is otherwise necessary, that is fine, but please
   isolate to its own commit so I can cherry-pick around it.
+  
+### Generating a new release
+
+1. Bump the version: `rake version:bump:{major,minor,patch}`.
+2. Update `CHANGELOG.md` & commit.
+3. Use `rake release` to regenerate gemspec, push a tag to git, and push a new `.gem` to rubygems.org
