@@ -1,3 +1,8 @@
+# 1.1.2
+
+ - Increase challenge file poll wait time to 60 seconds to match
+   [Heroku's limit](https://devcenter.heroku.com/articles/limits).
+
 # 1.1.1
 
  - Capture `OpenURI::HTTPRedirect` exceptions when polling for challenge
