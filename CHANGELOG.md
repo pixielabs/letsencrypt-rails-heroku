@@ -1,3 +1,10 @@
+# 1.1.1
+
+ - Capture `OpenURI::HTTPRedirect` exceptions when polling for challenge
+   filename. Heroku apps configured for zero downtime will be able to respond
+   straight away to the request, but will probably respond with a redirect if
+   configured with `force_ssl`. Closes issue #41.
+
 # 1.1.0
 
  - Make `ACME_DOMAIN` optional by using the Heroku API to get a full list of
