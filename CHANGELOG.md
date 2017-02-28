@@ -1,3 +1,8 @@
+# 1.1.3
+
+ - 1.1.1 wasn't a correct fix for catching redirects during polling, this
+   should work better!
+
 # 1.1.2
 
  - Increase challenge file poll wait time to 60 seconds to match
