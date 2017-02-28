@@ -63,7 +63,7 @@ namespace :letsencrypt do
       begin
         open("http://#{hostname}/#{challenge.filename}").read
       rescue OpenURI::HTTPError, OpenURI::HTTPRedirect => e
-        if Time.now - start_time <= 30
+        if Time.now - start_time <= 60
           puts "Error fetching challenge, retrying... #{e.message}"
           sleep(5)
           retry
