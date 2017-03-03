@@ -117,10 +117,10 @@ namespace :letsencrypt do
 
     # Send certificates to Heroku via API
 
-    endpoint = case Letsencrypt.configuration.ssl_endpoint_type
+    endpoint = case Letsencrypt.configuration.ssl_type
                when 'sni'
                  heroku.sni_endpoint
-               when 'ssl'
+               when 'endpoint'
                  heroku.ssl_endpoint
                end
 

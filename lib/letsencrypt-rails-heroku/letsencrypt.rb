@@ -16,7 +16,7 @@ module Letsencrypt
 
   class Configuration
     attr_accessor :heroku_token, :heroku_app, :acme_email, :acme_domain,
-      :acme_endpoint, :ssl_endpoint_type
+      :acme_endpoint, :ssl_type
     
     # Not settable by user; part of the gem's behaviour.
     attr_reader :acme_challenge_filename, :acme_challenge_file_content
@@ -27,7 +27,7 @@ module Letsencrypt
       @acme_email = ENV["ACME_EMAIL"]
       @acme_domain = ENV["ACME_DOMAIN"]
       @acme_endpoint = ENV["ACME_ENDPOINT"] || 'https://acme-v01.api.letsencrypt.org/'
-      @ssl_endpoint_type = ENV["SSL_ENDPOINT_TYPE"] || 'sni'
+      @ssl_type = ENV["SSL_TYPE"] || 'sni'
       @acme_challenge_filename = ENV["ACME_CHALLENGE_FILENAME"]
       @acme_challenge_file_content = ENV["ACME_CHALLENGE_FILE_CONTENT"]
     end
