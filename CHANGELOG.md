@@ -1,3 +1,7 @@
+# 1.2.0
+
+ - Support SSL Endpoint configuration, as well as the default SNI.
+
 # 1.1.3
 
  - 1.1.1 wasn't a correct fix for catching redirects during polling, this
