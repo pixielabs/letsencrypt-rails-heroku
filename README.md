@@ -73,6 +73,9 @@ which you should set.
  * `ACME_EMAIL`: Your email address, should be valid.
  * `HEROKU_TOKEN`: An API token for this app. See below
  * `HEROKU_APP`: Name of Heroku app e.g. bottomless-cavern-7173
+ * `SSL_TYPE`: Optional: One of `sni` or `endpoint`, defaults to `sni`.
+   `endpoint` requires your app to have an
+   [SSL endpoint addon](https://elements.heroku.com/addons/ssl) configured.
 
 The gem itself will temporarily create additional environment variables during
 the challenge / validation process:
@@ -179,8 +182,6 @@ Your domain is still configured as a CNAME or ALIAS to `your-app.herokuapp.com`.
 
 - Provide instructions for running the gem decoupled from the app it is 
   securing, for the paranoid.
-
-- Support non-SNI Heroku SSL too.
 
 ## Contributing
 

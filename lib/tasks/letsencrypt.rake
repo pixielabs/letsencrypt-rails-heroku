@@ -117,20 +117,27 @@ namespace :letsencrypt do
 
     # Send certificates to Heroku via API
 
+    endpoint = case Letsencrypt.configuration.ssl_type
+               when 'sni'
+                 heroku.sni_endpoint
+               when 'endpoint'
+                 heroku.ssl_endpoint
+               end
+
     # First check for existing certificates:
-    certificates = heroku.sni_endpoint.list(heroku_app)
+    certificates = endpoint.list(heroku_app)
 
     begin
       if certificates.any?
         print "Updating existing certificate #{certificates[0]['name']}..."
-        heroku.sni_endpoint.update(heroku_app, certificates[0]['name'], {
+        endpoint.update(heroku_app, certificates[0]['name'], {
           certificate_chain: certificate.fullchain_to_pem,
           private_key: certificate.request.private_key.to_pem
         })
         puts "Done!"
       else
         print "Adding new certificate..."
-        heroku.sni_endpoint.create(heroku_app, {
+        endpoint.create(heroku_app, {
           certificate_chain: certificate.fullchain_to_pem,
           private_key: certificate.request.private_key.to_pem
         })
