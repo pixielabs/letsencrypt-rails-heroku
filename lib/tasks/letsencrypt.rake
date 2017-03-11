@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 require 'open-uri'
 require 'openssl'
 require 'acme-client'
@@ -7,9 +8,14 @@ namespace :letsencrypt do
 
   desc 'Renew your LetsEncrypt certificate'
   task :renew do
-    # Check configuration looks OK
-    abort "letsencrypt-rails-heroku is configured incorrectly. Are you missing an environment variable or other configuration? You should have a heroku_token, heroku_app and acme_email configured either via a `Letsencrypt.configure` block in an initializer or as environment variables." unless Letsencrypt.configuration.valid?
+    unless Letsencrypt.configuration.valid?
+      abort "letsencrypt-rails-heroku is configured incorrectly. Are you missing an environment variable or other configuration? You should have a heroku_token, heroku_app and acme_email configured either via a 'Letsencrypt.configure' block in an initializer or as environment variables."
+    end
 
+    unless Letsencrypt.configuration.need_renew?
+      puts "The current certificate will expire in more than #{Letsencrypt.configuration.acme_renew_window} days"
+      exit
+    end
     # Set up Heroku client
     heroku = PlatformAPI.connect_oauth Letsencrypt.configuration.heroku_token
     heroku_app = Letsencrypt.configuration.heroku_app
@@ -44,9 +50,9 @@ namespace :letsencrypt do
 
       print "Setting config vars on Heroku..."
       heroku.config_var.update(heroku_app, {
-        'ACME_CHALLENGE_FILENAME' => challenge.filename,
-        'ACME_CHALLENGE_FILE_CONTENT' => challenge.file_content
-      })
+                                            'ACME_CHALLENGE_FILENAME' => challenge.filename,
+                                            'ACME_CHALLENGE_FILE_CONTENT' => challenge.file_content
+                                           })
       puts "Done!"
 
       # Wait for app to come up
@@ -54,7 +60,7 @@ namespace :letsencrypt do
 
       # Get the domain name from Heroku
       hostname = heroku.domain.list(heroku_app).first['hostname']
-      
+
       # Wait at least a little bit, otherwise the first request will almost always fail.
       sleep(2)
 
@@ -105,9 +111,9 @@ namespace :letsencrypt do
     # Unset temporary config vars. We don't care about waiting for this to
     # restart
     heroku.config_var.update(heroku_app, {
-      'ACME_CHALLENGE_FILENAME' => nil,
-      'ACME_CHALLENGE_FILE_CONTENT' => nil
-    })
+                                          'ACME_CHALLENGE_FILENAME' => nil,
+                                          'ACME_CHALLENGE_FILE_CONTENT' => nil
+                                         })
 
     # Create CSR
     csr = Acme::Client::CertificateRequest.new(names: domains)
@@ -131,22 +137,26 @@ namespace :letsencrypt do
       if certificates.any?
         print "Updating existing certificate #{certificates[0]['name']}..."
         endpoint.update(heroku_app, certificates[0]['name'], {
-          certificate_chain: certificate.fullchain_to_pem,
-          private_key: certificate.request.private_key.to_pem
-        })
+                                                              certificate_chain: certificate.fullchain_to_pem,
+                                                              private_key: certificate.request.private_key.to_pem
+                                                             })
         puts "Done!"
       else
         print "Adding new certificate..."
         endpoint.create(heroku_app, {
-          certificate_chain: certificate.fullchain_to_pem,
-          private_key: certificate.request.private_key.to_pem
-        })
+                                     certificate_chain: certificate.fullchain_to_pem,
+                                     private_key: certificate.request.private_key.to_pem
+                                    })
         puts "Done!"
       end
     rescue Excon::Error::UnprocessableEntity => e
       warn "Error adding certificate to Heroku. Response from Heroku’s API follows:"
       raise Letsencrypt::Error::HerokuCertificateError, e.response.body
     end
+
+    heroku.config_var.update(heroku_app, {
+                                          'ACME_EXPIRE_ON' => 90.days.since.strftime("%Y-%m-%d")
+                                         })
 
   end
 
