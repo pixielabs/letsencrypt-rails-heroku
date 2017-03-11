@@ -8,7 +8,7 @@ namespace :letsencrypt do
   desc 'Renew your LetsEncrypt certificate'
   task :renew do
     # Check configuration looks OK
-    abort "letsencrypt-rails-heroku is configured incorrectly. Are you missing an environment variable or other configuration? You should have a heroku_token, heroku_app, acme_email and acme_domain configured either via a `Letsencrypt.configure` block in an initializer or as environment variables." unless Letsencrypt.configuration.valid?
+    abort "letsencrypt-rails-heroku is configured incorrectly. Are you missing an environment variable or other configuration? You should have a heroku_token, heroku_app and acme_email configured either via a `Letsencrypt.configure` block in an initializer or as environment variables." unless Letsencrypt.configuration.valid?
 
     # Set up Heroku client
     heroku = PlatformAPI.connect_oauth Letsencrypt.configuration.heroku_token
@@ -27,7 +27,14 @@ namespace :letsencrypt do
     registration.agree_terms
     puts "Done!"
 
-    domains = Letsencrypt.configuration.acme_domain.split(',').map(&:strip)
+    domains = []
+    if Letsencrypt.configuration.acme_domain
+      puts "Using ACME_DOMAIN configuration variable..."
+      domains = Letsencrypt.configuration.acme_domain.split(',').map(&:strip)
+    else
+      domains = heroku.domain.list(heroku_app).map{|domain| domain['hostname']}
+      puts "Using #{domains.length} configured Heroku domain(s) for this app..."
+    end
 
     domains.each do |domain|
       puts "Performing verification for #{domain}:"
@@ -52,8 +59,9 @@ namespace :letsencrypt do
 
       begin
         open("http://#{domain}/#{challenge.filename}").read
-      rescue OpenURI::HTTPError => e
-        if Time.now - start_time <= 30
+      rescue OpenURI::HTTPError, RuntimeError => e
+        raise e if e.is_a?(RuntimeError) && !e.message.include?("redirection forbidden")
+        if Time.now - start_time <= 60
           puts "Error fetching challenge, retrying... #{e.message}"
           sleep(5)
           retry
@@ -106,20 +114,27 @@ namespace :letsencrypt do
 
     # Send certificates to Heroku via API
 
+    endpoint = case Letsencrypt.configuration.ssl_type
+               when 'sni'
+                 heroku.sni_endpoint
+               when 'endpoint'
+                 heroku.ssl_endpoint
+               end
+
     # First check for existing certificates:
-    certificates = heroku.sni_endpoint.list(heroku_app)
+    certificates = endpoint.list(heroku_app)
 
     begin
       if certificates.any?
         print "Updating existing certificate #{certificates[0]['name']}..."
-        heroku.sni_endpoint.update(heroku_app, certificates[0]['name'], {
+        endpoint.update(heroku_app, certificates[0]['name'], {
           certificate_chain: certificate.fullchain_to_pem,
           private_key: certificate.request.private_key.to_pem
         })
         puts "Done!"
       else
         print "Adding new certificate..."
-        heroku.sni_endpoint.create(heroku_app, {
+        endpoint.create(heroku_app, {
           certificate_chain: certificate.fullchain_to_pem,
           private_key: certificate.request.private_key.to_pem
         })

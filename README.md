@@ -67,9 +67,15 @@ which you should set.
    certificates, e.g. `example.com,www.example.com`. Your Heroku app should be
    configured to answer to all these domains, because LetsEncrypt will make a
    request to verify ownership.
+
+   If you leave this blank, the gem will try and use the Heroku API to get a 
+   list of configured domains for your app, and verify all of them.
  * `ACME_EMAIL`: Your email address, should be valid.
  * `HEROKU_TOKEN`: An API token for this app. See below
  * `HEROKU_APP`: Name of Heroku app e.g. bottomless-cavern-7173
+ * `SSL_TYPE`: Optional: One of `sni` or `endpoint`, defaults to `sni`.
+   `endpoint` requires your app to have an
+   [SSL endpoint addon](https://elements.heroku.com/addons/ssl) configured.
 
 The gem itself will temporarily create additional environment variables during
 the challenge / validation process:
@@ -159,6 +165,12 @@ following security considerations:
 
    The gem performs some cursory checks to make sure the filename is roughly
    what is expected to try and mitigate this.
+   
+## Troubleshooting
+
+### Common name invalid errors (security certificate is from *.herokuapp.com)
+
+Your domain is still configured as a CNAME or ALIAS to `your-app.herokuapp.com`. Check the output of `heroku domains` matches your DNS configuration. When you add an SNI cert to an app for the first time [the DNS target changes](https://devcenter.heroku.com/articles/custom-domains#view-existing-domains).
 
 ## To-do list
 
@@ -170,8 +182,6 @@ following security considerations:
 
 - Provide instructions for running the gem decoupled from the app it is 
   securing, for the paranoid.
-
-- Support non-SNI Heroku SSL too.
 
 ## Contributing
 
@@ -187,3 +197,9 @@ following security considerations:
 - Please try not to mess with the Rakefile, version, or history. If you want to
   have your own version, or is otherwise necessary, that is fine, but please
   isolate to its own commit so I can cherry-pick around it.
+  
+### Generating a new release
+
+1. Bump the version: `rake version:bump:{major,minor,patch}`.
+2. Update `CHANGELOG.md` & commit.
+3. Use `rake release` to regenerate gemspec, push a tag to git, and push a new `.gem` to rubygems.org
