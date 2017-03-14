@@ -51,7 +51,7 @@ redirects on their verification requests:
 ```ruby
 Rails.application.configure do
   # <...>
-  
+
   config.middleware.insert_before ActionDispatch::SSL, Letsencrypt::Middleware
 
   # <...>
@@ -68,7 +68,7 @@ which you should set.
    configured to answer to all these domains, because LetsEncrypt will make a
    request to verify ownership.
 
-   If you leave this blank, the gem will try and use the Heroku API to get a 
+   If you leave this blank, the gem will try and use the Heroku API to get a
    list of configured domains for your app, and verify all of them.
  * `ACME_EMAIL`: Your email address, should be valid.
  * `HEROKU_TOKEN`: An API token for this app. See below
@@ -76,7 +76,7 @@ which you should set.
  * `SSL_TYPE`: Optional: One of `sni` or `endpoint`, defaults to `sni`.
    `endpoint` requires your app to have an
    [SSL endpoint addon](https://elements.heroku.com/addons/ssl) configured.
- * `ACME_EXPIRE_WINDOW`: Optional: certificate will be renewed when there 
+ * `ACME_EXPIRE_WINDOW`: Optional: certificate will be renewed when there
    are less then this value from the expire date, default to 30
 
 The gem itself will temporarily create additional environment variables during
@@ -84,7 +84,6 @@ the challenge / validation process:
 
  * `ACME_CHALLENGE_FILENAME`: The path of the file LetsEncrypt will request.
  * `ACME_CHALLENGE_FILE_CONTENT`: The content of that challenge file.
- * `ACME_EXPIRE_ON`: The date when the certificate will expire
 
 ## Creating a Heroku token
 
@@ -130,7 +129,7 @@ Setting config vars on Heroku...Done!
 Giving config vars time to change...Done!
 Testing filename works (to bring up app)...done!
 Adding new certificate...Done!
-$ 
+$
 ```
 
 If this is the first time you have used an SNI-based SSL certificate on your
@@ -156,7 +155,7 @@ following security considerations:
    token to impersonate the account it was created with when accessing
    the Heroku API. This is important if your account has access to other apps
    that your collaborators don’t. Additionally, if your application environment was
-   leaked this would give the attacker access to the Heroku API as your user account. 
+   leaked this would give the attacker access to the Heroku API as your user account.
    [More information about Heroku’s API and oAuth](https://devcenter.heroku.com/articles/oauth#direct-authorization).
 
    You should create the API token from a suitably locked-down account.
@@ -168,7 +167,7 @@ following security considerations:
 
    The gem performs some cursory checks to make sure the filename is roughly
    what is expected to try and mitigate this.
-   
+
 ## Troubleshooting
 
 ### Common name invalid errors (security certificate is from *.herokuapp.com)
@@ -183,7 +182,7 @@ Your domain is still configured as a CNAME or ALIAS to `your-app.herokuapp.com`.
 - Stop using a fork of the `platform-api` gem once it supports the SNI endpoint
   API calls. [See issue #49 of the platform-api gem](https://github.com/heroku/platform-api/issues/49).
 
-- Provide instructions for running the gem decoupled from the app it is 
+- Provide instructions for running the gem decoupled from the app it is
   securing, for the paranoid.
 
 ## Contributing
@@ -200,7 +199,7 @@ Your domain is still configured as a CNAME or ALIAS to `your-app.herokuapp.com`.
 - Please try not to mess with the Rakefile, version, or history. If you want to
   have your own version, or is otherwise necessary, that is fine, but please
   isolate to its own commit so I can cherry-pick around it.
-  
+
 ### Generating a new release
 
 1. Bump the version: `rake version:bump:{major,minor,patch}`.

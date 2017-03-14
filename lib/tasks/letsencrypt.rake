@@ -12,13 +12,41 @@ namespace :letsencrypt do
       abort "letsencrypt-rails-heroku is configured incorrectly. Are you missing an environment variable or other configuration? You should have a heroku_token, heroku_app and acme_email configured either via a 'Letsencrypt.configure' block in an initializer or as environment variables."
     end
 
-    unless Letsencrypt.configuration.need_renew?
-      puts "The current certificate will expire in more than #{Letsencrypt.configuration.acme_renew_window} days"
-      exit
-    end
     # Set up Heroku client
     heroku = PlatformAPI.connect_oauth Letsencrypt.configuration.heroku_token
     heroku_app = Letsencrypt.configuration.heroku_app
+
+    domains = []
+    if Letsencrypt.configuration.acme_domain
+      puts "Using ACME_DOMAIN configuration variable..."
+      domains = Letsencrypt.configuration.acme_domain.split(',').map(&:strip)
+    else
+      domains = heroku.domain.list(heroku_app).map{|domain| domain['hostname']}
+      puts "Using #{domains.length} configured Heroku domain(s) for this app..."
+    end
+
+    print "Verify if a valid certificate already exists ... "
+    uri = URI.parse("https://#{domains.first}")
+    http = Net::HTTP.new(uri.host,uri.port)
+    http.use_ssl = true
+    http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+    begin
+      http.start do |h|
+        @cert = h.peer_cert
+      end
+    rescue OpenSSL::SSL::SSLError => e
+      # in this case a certificate doesn't exists, so a do nothing
+      puts "No valid certicates found!"
+    else
+      print "Found "
+      # if a valid certificate exists check if is still expiring
+      if @cert.not_after >= Date.today + Letsencrypt.configuration.acme_renew_window.days
+        puts " but certificate is not due to expire. Skipping renew!"
+        exit 0
+      else
+        puts " but is due to expire!"
+      end
+    end
 
     # Create a private key
     print "Creating account key..."
@@ -32,15 +60,6 @@ namespace :letsencrypt do
 
     registration.agree_terms
     puts "Done!"
-
-    domains = []
-    if Letsencrypt.configuration.acme_domain
-      puts "Using ACME_DOMAIN configuration variable..."
-      domains = Letsencrypt.configuration.acme_domain.split(',').map(&:strip)
-    else
-      domains = heroku.domain.list(heroku_app).map{|domain| domain['hostname']}
-      puts "Using #{domains.length} configured Heroku domain(s) for this app..."
-    end
 
     domains.each do |domain|
       puts "Performing verification for #{domain}:"
@@ -153,11 +172,5 @@ namespace :letsencrypt do
       warn "Error adding certificate to Heroku. Response from Heroku’s API follows:"
       raise Letsencrypt::Error::HerokuCertificateError, e.response.body
     end
-
-    heroku.config_var.update(heroku_app, {
-                                          'ACME_EXPIRE_ON' => 90.days.since.strftime("%Y-%m-%d")
-                                         })
-
   end
-
 end
