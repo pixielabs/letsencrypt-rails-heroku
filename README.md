@@ -110,12 +110,12 @@ After deploy, you can run
 on Rails 3.2, Rails 4
 
 ```
-bundle exec rake letsencrypt:renew
+heroku run bundle exec rake letsencrypt:renew
 ```
 on Rails 5+
 
 ```
-bundle exec rails letsencrypt:renew
+heroku run bundle exec rails letsencrypt:renew
 ```
 
 Ensure that the output looks good:
@@ -137,6 +137,13 @@ app, you may need to alter your DNS configuration as per
 [Heroku's instructions](https://devcenter.heroku.com/articles/ssl-beta#change-your-dns-for-all-domains-on-your-app).
 
 You can see these details by typing `heroku domains`.
+
+Sometime you have to add a new domain to the heroku application. In that case you may want
+to force generation of a new certificate. In order to perform this, run
+
+```
+heroku run bundle exec rails 'letsencrypt:renew[:force_renew]'
+```
 
 ## Adding a scheduled task
 

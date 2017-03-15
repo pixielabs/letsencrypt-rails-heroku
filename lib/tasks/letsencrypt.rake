@@ -7,7 +7,9 @@ require 'platform-api'
 namespace :letsencrypt do
 
   desc 'Renew your LetsEncrypt certificate'
-  task :renew do
+  task :renew, [:policy] do |_t, attributes|
+    policy = attributes.fetch(:policy, :keep_until_expiring).to_sym
+
     unless Letsencrypt.configuration.valid?
       abort "letsencrypt-rails-heroku is configured incorrectly. Are you missing an environment variable or other configuration? You should have a heroku_token, heroku_app and acme_email configured either via a 'Letsencrypt.configure' block in an initializer or as environment variables."
     end
@@ -25,28 +27,36 @@ namespace :letsencrypt do
       puts "Using #{domains.length} configured Heroku domain(s) for this app..."
     end
 
-    print "Verify if a valid certificate already exists ... "
-    uri = URI.parse("https://#{domains.first}")
-    http = Net::HTTP.new(uri.host,uri.port)
-    http.use_ssl = true
-    http.verify_mode = OpenSSL::SSL::VERIFY_NONE
-    begin
-      http.start do |h|
-        @cert = h.peer_cert
-      end
-    rescue OpenSSL::SSL::SSLError => e
-      # in this case a certificate doesn't exists, so a do nothing
-      puts "No valid certicates found!"
-    else
-      print "Found "
-      # if a valid certificate exists check if is still expiring
-      if @cert.not_after >= Date.today + Letsencrypt.configuration.acme_renew_window.days
-        puts " but certificate is not due to expire. Skipping renew!"
-        exit 0
+    if policy == :keep_until_expiring
+      print "Verify if a valid certificate already exists ... "
+      uri = URI.parse("https://#{domains.first}")
+      http = Net::HTTP.new(uri.host,uri.port)
+      http.use_ssl = true
+      http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+      begin
+        http.start do |h|
+          @cert = h.peer_cert
+        end
+      rescue OpenSSL::SSL::SSLError => e
+        # in this case a certificate doesn't exists, so a do nothing
+        puts "No valid certicates found!"
       else
-        puts " but is due to expire!"
+        print "Found "
+        # if a valid certificate exists check if is still expiring
+        if @cert.not_after >= Date.today + 30.days
+          puts " but certificate is not due to expire. Skipping renew!"
+          exit 0
+        else
+          puts " but is due to expire!"
+        end
       end
+    elsif policy == :force_renew
+      puts "Forcing renew!"
+    else
+      puts "Renew policy not valid"
+      exit
     end
+
 
     # Create a private key
     print "Creating account key..."
