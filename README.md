@@ -76,8 +76,6 @@ which you should set.
  * `SSL_TYPE`: Optional: One of `sni` or `endpoint`, defaults to `sni`.
    `endpoint` requires your app to have an
    [SSL endpoint addon](https://elements.heroku.com/addons/ssl) configured.
- * `ACME_EXPIRE_WINDOW`: Optional: certificate will be renewed when there
-   are less then this value from the expire date, default to 30
 
 The gem itself will temporarily create additional environment variables during
 the challenge / validation process:
