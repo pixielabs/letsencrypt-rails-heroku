@@ -131,6 +131,18 @@ scheduled task should be configured to run `rake letsencrypt:renew` as often
 as you want to renew your certificate. Letsencrypt certificates are valid for
 90 days, but there's no harm renewing them more frequently than that.
 
+If this is this first time job you are using job scheduling, follow 
+[the heroku scheduler](https://devcenter.heroku.com/articles/scheduler#installing-the-add-on)
+documentation. 
+
+```
+heroku addons:create scheduler:standard
+heroku addons:open scheduler
+# press "add new job"
+if [ "$(date +%d)" = 01 ]; then rake letsencrypt:renew; fi
+# press "save"
+```
+
 Heroku Scheduler only lets you run a task as infrequently as once a day, but
 you don't want to renew your SSL certificate every day (you will hit
 [the rate limit](https://letsencrypt.org/docs/rate-limits/)). You can make it
