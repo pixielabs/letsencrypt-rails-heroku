@@ -51,7 +51,7 @@ redirects on their verification requests:
 ```ruby
 Rails.application.configure do
   # <...>
-  
+
   config.middleware.insert_before ActionDispatch::SSL, Letsencrypt::Middleware
 
   # <...>
@@ -68,7 +68,7 @@ which you should set.
    configured to answer to all these domains, because LetsEncrypt will make a
    request to verify ownership.
 
-   If you leave this blank, the gem will try and use the Heroku API to get a 
+   If you leave this blank, the gem will try and use the Heroku API to get a
    list of configured domains for your app, and verify all of them.
  * `ACME_EMAIL`: Your email address, should be valid.
  * `HEROKU_TOKEN`: An API token for this app. See below
@@ -103,8 +103,20 @@ Use the output of that to set the token (`HEROKU_TOKEN`).
 
 ## Using for the first time
 
-After deploying, run `heroku run rake letsencrypt:renew`. Ensure that the
-output looks good:
+After deploy, you can run
+
+on Rails 3.2, Rails 4
+
+```
+heroku run bundle exec rake letsencrypt:renew
+```
+on Rails 5+
+
+```
+heroku run bundle exec rails letsencrypt:renew
+```
+
+Ensure that the output looks good:
 
 ```
 $ heroku run rake letsencrypt:renew
@@ -115,7 +127,7 @@ Setting config vars on Heroku...Done!
 Giving config vars time to change...Done!
 Testing filename works (to bring up app)...done!
 Adding new certificate...Done!
-$ 
+$
 ```
 
 If this is the first time you have used an SNI-based SSL certificate on your
@@ -123,6 +135,13 @@ app, you may need to alter your DNS configuration as per
 [Heroku's instructions](https://devcenter.heroku.com/articles/ssl-beta#change-your-dns-for-all-domains-on-your-app).
 
 You can see these details by typing `heroku domains`.
+
+Sometime you have to add a new domain to the heroku application. In that case you may want
+to force generation of a new certificate. In order to perform this, run
+
+```
+heroku run bundle exec rails 'letsencrypt:renew[:force_renew]'
+```
 
 ## Adding a scheduled task
 
@@ -132,19 +151,7 @@ on their scheduler addon](https://devcenter.heroku.com/articles/scheduler).
 
 The scheduled task should be configured to run `rake letsencrypt:renew` as often
 as you want to renew your certificate. Letsencrypt certificates are valid for
-90 days, but there's no harm renewing them more frequently than that.
-
-Heroku Scheduler only lets you run a task as infrequently as once a day, but
-you don't want to renew your SSL certificate every day (you will hit
-[the rate limit](https://letsencrypt.org/docs/rate-limits/)). You can make it
-run less frequently using a shell control statement. For example to renew your
-certificate on the 1st day of every month:
-
-```
-if [ "$(date +%d)" = 01 ]; then rake letsencrypt:renew; fi
-```
-
-Source: [blog.dbrgn.ch](https://blog.dbrgn.ch/2013/10/4/heroku-schedule-weekly-monthly-tasks/)
+90 days, and usually it will renewed when there are less then 30 from the expire date.
 
 ## Security considerations
 
@@ -156,7 +163,7 @@ following security considerations:
    token to impersonate the account it was created with when accessing
    the Heroku API. This is important if your account has access to other apps
    that your collaborators don’t. Additionally, if your application environment was
-   leaked this would give the attacker access to the Heroku API as your user account. 
+   leaked this would give the attacker access to the Heroku API as your user account.
    [More information about Heroku’s API and oAuth](https://devcenter.heroku.com/articles/oauth#direct-authorization).
 
    You should create the API token from a suitably locked-down account.
@@ -168,7 +175,7 @@ following security considerations:
 
    The gem performs some cursory checks to make sure the filename is roughly
    what is expected to try and mitigate this.
-   
+
 ## Troubleshooting
 
 ### Common name invalid errors (security certificate is from *.herokuapp.com)
@@ -183,7 +190,7 @@ Your domain is still configured as a CNAME or ALIAS to `your-app.herokuapp.com`.
 - Stop using a fork of the `platform-api` gem once it supports the SNI endpoint
   API calls. [See issue #49 of the platform-api gem](https://github.com/heroku/platform-api/issues/49).
 
-- Provide instructions for running the gem decoupled from the app it is 
+- Provide instructions for running the gem decoupled from the app it is
   securing, for the paranoid.
 
 ## Contributing
@@ -200,7 +207,7 @@ Your domain is still configured as a CNAME or ALIAS to `your-app.herokuapp.com`.
 - Please try not to mess with the Rakefile, version, or history. If you want to
   have your own version, or is otherwise necessary, that is fine, but please
   isolate to its own commit so I can cherry-pick around it.
-  
+
 ### Generating a new release
 
 1. Bump the version: `rake version:bump:{major,minor,patch}`.

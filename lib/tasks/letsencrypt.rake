@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 require 'open-uri'
 require 'openssl'
 require 'acme-client'
@@ -6,13 +7,56 @@ require 'platform-api'
 namespace :letsencrypt do
 
   desc 'Renew your LetsEncrypt certificate'
-  task :renew do
-    # Check configuration looks OK
-    abort "letsencrypt-rails-heroku is configured incorrectly. Are you missing an environment variable or other configuration? You should have a heroku_token, heroku_app and acme_email configured either via a `Letsencrypt.configure` block in an initializer or as environment variables." unless Letsencrypt.configuration.valid?
+  task :renew, [:policy] do |_t, attributes|
+    policy = attributes.fetch(:policy, :keep_until_expiring).to_sym
+
+    unless Letsencrypt.configuration.valid?
+      abort "letsencrypt-rails-heroku is configured incorrectly. Are you missing an environment variable or other configuration? You should have a heroku_token, heroku_app and acme_email configured either via a 'Letsencrypt.configure' block in an initializer or as environment variables."
+    end
 
     # Set up Heroku client
     heroku = PlatformAPI.connect_oauth Letsencrypt.configuration.heroku_token
     heroku_app = Letsencrypt.configuration.heroku_app
+
+    domains = []
+    if Letsencrypt.configuration.acme_domain
+      puts "Using ACME_DOMAIN configuration variable..."
+      domains = Letsencrypt.configuration.acme_domain.split(',').map(&:strip)
+    else
+      domains = heroku.domain.list(heroku_app).map{|domain| domain['hostname']}
+      puts "Using #{domains.length} configured Heroku domain(s) for this app..."
+    end
+
+    if policy == :keep_until_expiring
+      print "Verify if a valid certificate already exists ... "
+      uri = URI.parse("https://#{domains.first}")
+      http = Net::HTTP.new(uri.host,uri.port)
+      http.use_ssl = true
+      http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+      begin
+        http.start do |h|
+          @cert = h.peer_cert
+        end
+      rescue OpenSSL::SSL::SSLError => e
+        # in this case a certificate doesn't exists, so a do nothing
+        puts "No valid certicates found!"
+      else
+        print "Found "
+        # if a valid certificate exists check if is still expiring
+        if @cert.not_after >= Date.today + 30.days
+          puts " but certificate is not due to expire. Skipping renew!"
+          exit 0
+        else
+          puts " but is due to expire!"
+        end
+      end
+    elsif policy == :force_renew
+      puts "Forcing renew!"
+    else
+      puts "Renew policy not valid"
+      exit
+    end
+
 
     # Create a private key
     print "Creating account key..."
@@ -27,15 +71,6 @@ namespace :letsencrypt do
     registration.agree_terms
     puts "Done!"
 
-    domains = []
-    if Letsencrypt.configuration.acme_domain
-      puts "Using ACME_DOMAIN configuration variable..."
-      domains = Letsencrypt.configuration.acme_domain.split(',').map(&:strip)
-    else
-      domains = heroku.domain.list(heroku_app).map{|domain| domain['hostname']}
-      puts "Using #{domains.length} configured Heroku domain(s) for this app..."
-    end
-
     domains.each do |domain|
       puts "Performing verification for #{domain}:"
 
@@ -44,9 +79,9 @@ namespace :letsencrypt do
 
       print "Setting config vars on Heroku..."
       heroku.config_var.update(heroku_app, {
-        'ACME_CHALLENGE_FILENAME' => challenge.filename,
-        'ACME_CHALLENGE_FILE_CONTENT' => challenge.file_content
-      })
+                                            'ACME_CHALLENGE_FILENAME' => challenge.filename,
+                                            'ACME_CHALLENGE_FILE_CONTENT' => challenge.file_content
+                                           })
       puts "Done!"
 
       # Wait for app to come up
@@ -54,7 +89,7 @@ namespace :letsencrypt do
 
       # Get the domain name from Heroku
       hostname = heroku.domain.list(heroku_app).first['hostname']
-      
+
       # Wait at least a little bit, otherwise the first request will almost always fail.
       sleep(2)
 
@@ -105,9 +140,9 @@ namespace :letsencrypt do
     # Unset temporary config vars. We don't care about waiting for this to
     # restart
     heroku.config_var.update(heroku_app, {
-      'ACME_CHALLENGE_FILENAME' => nil,
-      'ACME_CHALLENGE_FILE_CONTENT' => nil
-    })
+                                          'ACME_CHALLENGE_FILENAME' => nil,
+                                          'ACME_CHALLENGE_FILE_CONTENT' => nil
+                                         })
 
     # Create CSR
     csr = Acme::Client::CertificateRequest.new(names: domains)
@@ -131,23 +166,21 @@ namespace :letsencrypt do
       if certificates.any?
         print "Updating existing certificate #{certificates[0]['name']}..."
         endpoint.update(heroku_app, certificates[0]['name'], {
-          certificate_chain: certificate.fullchain_to_pem,
-          private_key: certificate.request.private_key.to_pem
-        })
+                                                              certificate_chain: certificate.fullchain_to_pem,
+                                                              private_key: certificate.request.private_key.to_pem
+                                                             })
         puts "Done!"
       else
         print "Adding new certificate..."
         endpoint.create(heroku_app, {
-          certificate_chain: certificate.fullchain_to_pem,
-          private_key: certificate.request.private_key.to_pem
-        })
+                                     certificate_chain: certificate.fullchain_to_pem,
+                                     private_key: certificate.request.private_key.to_pem
+                                    })
         puts "Done!"
       end
     rescue Excon::Error::UnprocessableEntity => e
       warn "Error adding certificate to Heroku. Response from Heroku’s API follows:"
       raise Letsencrypt::Error::HerokuCertificateError, e.response.body
     end
-
   end
-
 end
