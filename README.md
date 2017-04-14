@@ -76,12 +76,15 @@ which you should set.
  * `SSL_TYPE`: Optional: One of `sni` or `endpoint`, defaults to `sni`.
    `endpoint` requires your app to have an
    [SSL endpoint addon](https://elements.heroku.com/addons/ssl) configured.
+ * `ACME_EXPIRE_WINDOW`: Optional: certificate will be renewed when there 
+   are less then this value from the expire date, default to 30
 
 The gem itself will temporarily create additional environment variables during
 the challenge / validation process:
 
  * `ACME_CHALLENGE_FILENAME`: The path of the file LetsEncrypt will request.
  * `ACME_CHALLENGE_FILE_CONTENT`: The content of that challenge file.
+ * `ACME_EXPIRE_ON`: The date when the certificate will expire
 
 ## Creating a Heroku token
 
@@ -103,8 +106,20 @@ Use the output of that to set the token (`HEROKU_TOKEN`).
 
 ## Using for the first time
 
-After deploying, run `heroku run rake letsencrypt:renew`. Ensure that the
-output looks good:
+After deploy, you can run
+
+on Rails 3.2, Rails 4
+
+```
+bundle exec rake letsencrypt:renew
+```
+on Rails 5+
+
+```
+bundle exec rails letsencrypt:renew
+```
+
+Ensure that the output looks good:
 
 ```
 $ heroku run rake letsencrypt:renew
@@ -132,19 +147,7 @@ on their scheduler addon](https://devcenter.heroku.com/articles/scheduler).
 
 The scheduled task should be configured to run `rake letsencrypt:renew` as often
 as you want to renew your certificate. Letsencrypt certificates are valid for
-90 days, but there's no harm renewing them more frequently than that.
-
-Heroku Scheduler only lets you run a task as infrequently as once a day, but
-you don't want to renew your SSL certificate every day (you will hit
-[the rate limit](https://letsencrypt.org/docs/rate-limits/)). You can make it
-run less frequently using a shell control statement. For example to renew your
-certificate on the 1st day of every month:
-
-```
-if [ "$(date +%d)" = 01 ]; then rake letsencrypt:renew; fi
-```
-
-Source: [blog.dbrgn.ch](https://blog.dbrgn.ch/2013/10/4/heroku-schedule-weekly-monthly-tasks/)
+90 days, and usually it will renewed when there are less then 30 from the expire date.
 
 ## Security considerations
 
