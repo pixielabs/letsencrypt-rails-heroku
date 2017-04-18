@@ -141,7 +141,7 @@ run less frequently using a shell control statement. For example to renew your
 certificate on the 1st day of every month:
 
 ```
-if [ "$(date +%d)" = 01 ]; then rake letsencrypt:renew; fi
+if [ "$(date +%d)" = 01 ]; then bundle exec rake letsencrypt:renew; fi
 ```
 
 Source: [blog.dbrgn.ch](https://blog.dbrgn.ch/2013/10/4/heroku-schedule-weekly-monthly-tasks/)
