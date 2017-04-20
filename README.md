@@ -1,10 +1,9 @@
 # LetsEncrypt & Rails & Heroku
 
-[![Gem Version](https://badge.fury.io/rb/letsencrypt-rails-heroku.svg)](https://badge.fury.io/rb/letsencrypt-rails-heroku)
+## Deprecated: Heroku now support [free automated SSL certificates for paid dynos](https://devcenter.heroku.com/articles/automated-certificate-management), you should use that instead of this gem.
 
-**Update:** Heroku now support
-[free automated SSL certificates for paid dynos](https://blog.heroku.com/announcing-automated-certificate-management)
-which negates the need for this gem in most situations.
+
+[![Gem Version](https://badge.fury.io/rb/letsencrypt-rails-heroku.svg)](https://badge.fury.io/rb/letsencrypt-rails-heroku)
 
 This gem is a complete solution for securing your Ruby on Rails application
 on Heroku using their free SNI-based SSL and LetsEncrypt. It will automatically
