@@ -1,6 +1,6 @@
 # LetsEncrypt & Rails & Heroku
 
-## Deprecated: Heroku now support [free automated SSL certificates for paid dynos](https://devcenter.heroku.com/articles/automated-certificate-management), you should use that instead of this gem.
+### Deprecated: Heroku now support [free automated SSL certificates for paid dynos](https://devcenter.heroku.com/articles/automated-certificate-management), you should use that instead of this gem unless your situation is covered by the [known limitations](https://devcenter.heroku.com/articles/automated-certificate-management#known-limitations) of ACM, e.g. your app runs in Heroku Private Spaces.
 
 
 [![Gem Version](https://badge.fury.io/rb/letsencrypt-rails-heroku.svg)](https://badge.fury.io/rb/letsencrypt-rails-heroku)
