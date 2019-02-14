@@ -30,6 +30,10 @@ namespace :letsencrypt do
       print "Registering with LetsEncrypt..."
       registration = client.new_account(contact: "mailto:#{Letsencrypt.configuration.acme_email}",
                                         terms_of_service_agreed: true)
+      heroku.config_var.update(heroku_app, {
+          'ACME_KEY' => private_key.to_pem,
+          'ACME_KID' => registration.kid
+      })
       puts "Done!"
     else
       print "Using existing LetsEncrypt registration"
