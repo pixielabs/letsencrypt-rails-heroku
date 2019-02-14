@@ -38,6 +38,10 @@ namespace :letsencrypt do
                                 kid: Letsencrypt.configuration.acme_kid)
     end
 
+    puts "Use the following values for the key variables in future:",
+         "ACME_KEY: #{private_key.to_pem}",
+         ("ACME_KID: #{registration.kid}" if Letsencrypt.configuration.acme_kid.blank?)
+
     if Letsencrypt.configuration.acme_domain
       puts "Using ACME_DOMAIN configuration variable..."
       domains = Letsencrypt.configuration.acme_domain.split(',').map(&:strip)
@@ -91,7 +95,7 @@ namespace :letsencrypt do
 
         puts "Done!"
       else
-        print "HTTP challenge unavailable, falling back to DNS challenge"
+        puts "HTTP challenge unavailable, falling back to DNS challenge"
         using_dns = true
         challenge = auth.dns
         # Technically this could be something other than TXT I think, but acme-client
@@ -200,10 +204,6 @@ namespace :letsencrypt do
       warn "Error adding certificate to Heroku. Response from Heroku’s API follows:"
       raise Letsencrypt::Error::HerokuCertificateError, e.response.body
     end
-
-    puts "Use the following values for the key variables in future:",
-         "ACME_KEY: #{private_key.to_pem}",
-         ("ACME_KID: #{registration.kid}" if Letsencrypt.configuration.acme_kid.blank?)
 
   end
 
