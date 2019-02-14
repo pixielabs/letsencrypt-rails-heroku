@@ -6,6 +6,8 @@ module Letsencrypt
     class ChallengeUrlError < StandardError; end
     # Exception raised on timeout of challenge verification.
     class VerificationTimeoutError < StandardError; end
+    # Exception raised where DNS verification isn't correctly configured.
+    class DNSValidationError < StandardError; end
     # Exception raised when an error occurs adding the certificate to Heroku.
     class HerokuCertificateError < StandardError; end
   end

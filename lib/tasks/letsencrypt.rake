@@ -2,6 +2,7 @@ require 'open-uri'
 require 'openssl'
 require 'acme-client'
 require 'platform-api'
+require 'resolv'
 
 namespace :letsencrypt do
 
@@ -14,19 +15,29 @@ namespace :letsencrypt do
     heroku = PlatformAPI.connect_oauth Letsencrypt.configuration.heroku_token
     heroku_app = Letsencrypt.configuration.heroku_app
 
-    # Create a private key
-    print "Creating account key..."
-    private_key = OpenSSL::PKey::RSA.new(4096)
-    puts "Done!"
+    if Letsencrypt.configuration.acme_key.blank?
+      # Create a private key
+      print "Creating account key..."
+      private_key = OpenSSL::PKey::RSA.new(4096)
+      puts "Done!"
+    else
+      print "Using existing private key from acme-account-key.pem"
+      private_key = OpenSSL::PKey::RSA.new(Letsencrypt.configuration.acme_key)
+    end
 
-    Acme::Client.new(private_key: private_key, directory: Letsencrypt.configuration.acme_directory)
+    if Letsencrypt.configuration.acme_kid.blank?
+      client = Acme::Client.new(private_key: private_key, directory: Letsencrypt.configuration.acme_directory)
+      print "Registering with LetsEncrypt..."
+      registration = client.new_account(contact: "mailto:#{Letsencrypt.configuration.acme_email}",
+                                        terms_of_service_agreed: true)
+      puts "Done!"
+    else
+      print "Using existing LetsEncrypt registration"
+      client = Acme::Client.new(private_key: private_key,
+                                directory: Letsencrypt.configuration.acme_directory,
+                                kid: Letsencrypt.configuration.acme_kid)
+    end
 
-    print "Registering with LetsEncrypt..."
-    registration = client.new_account(contact: "mailto:#{Letsencrypt.configuration.acme_email}",
-                                      terms_of_service_agreed: true)
-    puts "Done!"
-
-    domains = []
     if Letsencrypt.configuration.acme_domain
       puts "Using ACME_DOMAIN configuration variable..."
       domains = Letsencrypt.configuration.acme_domain.split(',').map(&:strip)
@@ -38,42 +49,82 @@ namespace :letsencrypt do
     puts "Placing order..."
     order = client.new_order(identifiers: domains)
 
+    using_dns = false
+    dns_records_to_change = []
+
     order.authorizations.each do |auth|
       challenge = auth.http
+      # Always prefer HTTP challenge to DNS challenge; only use DNS challenge where
+      # HTTP challenge isn't possible (ex: wildcard domains)
+      if challenge
+        print "Setting config vars on Heroku..."
+        heroku.config_var.update(heroku_app, {
+            'ACME_CHALLENGE_FILENAME' => challenge.filename,
+            'ACME_CHALLENGE_FILE_CONTENT' => challenge.file_content
+        })
+        puts "Done!"
 
-      print "Setting config vars on Heroku..."
-      heroku.config_var.update(heroku_app, {
-        'ACME_CHALLENGE_FILENAME' => challenge.filename,
-        'ACME_CHALLENGE_FILE_CONTENT' => challenge.file_content
-      })
-      puts "Done!"
+        # Wait for app to come up
+        print "Testing filename works (to bring up app)..."
 
-      # Wait for app to come up
-      print "Testing filename works (to bring up app)..."
+        # Get the domain name from Heroku
+        hostname = heroku.domain.list(heroku_app).first['hostname']
 
-      # Get the domain name from Heroku
-      hostname = heroku.domain.list(heroku_app).first['hostname']
-      
-      # Wait at least a little bit, otherwise the first request will almost always fail.
-      sleep(2)
+        # Wait at least a little bit, otherwise the first request will almost always fail.
+        sleep(2)
 
-      start_time = Time.now
+        start_time = Time.now
 
-      begin
-        open("http://#{hostname}/#{challenge.filename}").read
-      rescue OpenURI::HTTPError, RuntimeError => e
-        raise e if e.is_a?(RuntimeError) && !e.message.include?("redirection forbidden")
-        if Time.now - start_time <= 60
-          puts "Error fetching challenge, retrying... #{e.message}"
-          sleep(5)
-          retry
-        else
-          failure_message = "Error waiting for response from http://#{hostname}/#{challenge.filename}, Error: #{e.message}"
-          raise Letsencrypt::Error::ChallengeUrlError, failure_message
+        begin
+          open("http://#{hostname}/#{challenge.filename}").read
+        rescue OpenURI::HTTPError, RuntimeError => e
+          raise e if e.is_a?(RuntimeError) && !e.message.include?("redirection forbidden")
+          if Time.now - start_time <= 60
+            puts "Error fetching challenge, retrying... #{e.message}"
+            sleep(5)
+            retry
+          else
+            failure_message = "Error waiting for response from http://#{hostname}/#{challenge.filename}, Error: #{e.message}"
+            raise Letsencrypt::Error::ChallengeUrlError, failure_message
+          end
+        end
+
+        puts "Done!"
+      else
+        print "HTTP challenge unavailable, falling back to DNS challenge"
+        using_dns = true
+        challenge = auth.dns
+        # Technically this could be something other than TXT I think, but acme-client
+        # only supports TXT, so I've only supported that here as well.
+        already_exists = false
+        Resolv::DNS.open do |dns|
+          ress = dns.getresources challenge.record_name + "." + auth.domain, Resolv::DNS::Resource::IN::TXT
+          ress.each do |r|
+            r.strings.each do |s|
+              if s == challenge.record_content
+                already_exists = true
+                break
+              end
+            end
+            break if already_exists
+          end
+        end
+        unless already_exists
+          dns_records_to_change.push(domain: auth.domain, record: { name: challenge.record_name,
+                                                         type: challenge.record_type,
+                                                         content: challenge.record_content })
         end
       end
 
-      puts "Done!"
+      if using_dns && !dns_records_to_change.blank?
+        puts "---", "DNS records are currently missing. Please add the following DNS records and retry:"
+        dns_records_to_change.each do |record|
+          puts "----", "Domain: #{record[:domain]}", "Record name: #{record[:record][:name]}",
+               "Record type: #{record[:record][:type]}", "Record content: #{record[:record][:content]}", "----"
+        end
+        puts "---"
+        raise Letsencrypt::Error::DNSValidationError
+      end
 
       print "Giving LetsEncrypt some time to verify..."
       # Once you are ready to serve the confirmation request you can proceed.
@@ -149,6 +200,10 @@ namespace :letsencrypt do
       warn "Error adding certificate to Heroku. Response from Heroku’s API follows:"
       raise Letsencrypt::Error::HerokuCertificateError, e.response.body
     end
+
+    puts "Use the following values for the key variables in future:",
+         "ACME_KEY: #{private_key.to_pem}",
+         ("ACME_KID: #{registration.kid}" if Letsencrypt.configuration.acme_kid.blank?)
 
   end
 
