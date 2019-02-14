@@ -25,15 +25,16 @@ module Letsencrypt
       @heroku_token = ENV["HEROKU_TOKEN"]
       @heroku_app = ENV["HEROKU_APP"]
       @acme_email = ENV["ACME_EMAIL"]
+      @terms_agreed = ENV.key? "ACME_TERMS_AGREED"
       @acme_domain = ENV["ACME_DOMAIN"]
-      @acme_endpoint = ENV["ACME_ENDPOINT"] || 'https://acme-v01.api.letsencrypt.org/'
+      @acme_directory = ENV["ACME_DIRECTORY"] || 'https://acme-v02.api.letsencrypt.org/directory'
       @ssl_type = ENV["SSL_TYPE"] || 'sni'
       @acme_challenge_filename = ENV["ACME_CHALLENGE_FILENAME"]
       @acme_challenge_file_content = ENV["ACME_CHALLENGE_FILE_CONTENT"]
     end
 
     def valid?
-      heroku_token && heroku_app && acme_email
+      heroku_token && heroku_app && acme_email && terms_agreed
     end
   end
 end

@@ -19,12 +19,11 @@ namespace :letsencrypt do
     private_key = OpenSSL::PKey::RSA.new(4096)
     puts "Done!"
 
-    client = Acme::Client.new(private_key: private_key, endpoint: Letsencrypt.configuration.acme_endpoint, connection_options: { request: { open_timeout: 5, timeout: 5 } })
+    Acme::Client.new(private_key: private_key, directory: Letsencrypt.configuration.acme_directory)
 
     print "Registering with LetsEncrypt..."
-    registration = client.register(contact: "mailto:#{Letsencrypt.configuration.acme_email}")
-
-    registration.agree_terms
+    registration = client.new_account(contact: "mailto:#{Letsencrypt.configuration.acme_email}",
+                                      terms_of_service_agreed: true)
     puts "Done!"
 
     domains = []
@@ -36,11 +35,11 @@ namespace :letsencrypt do
       puts "Using #{domains.length} configured Heroku domain(s) for this app..."
     end
 
-    domains.each do |domain|
-      puts "Performing verification for #{domain}:"
+    puts "Placing order..."
+    order = client.new_order(identifiers: domains)
 
-      authorization = client.authorize(domain: domain)
-      challenge = authorization.http01
+    order.authorizations.each do |auth|
+      challenge = auth.http
 
       print "Setting config vars on Heroku..."
       heroku.config_var.update(heroku_app, {
@@ -78,24 +77,25 @@ namespace :letsencrypt do
 
       print "Giving LetsEncrypt some time to verify..."
       # Once you are ready to serve the confirmation request you can proceed.
-      challenge.request_verification # => true
-      challenge.verify_status # => 'pending'
+      challenge.request_validation # => true
+      challenge.status # => 'pending'
 
       start_time = Time.now
 
-      while challenge.verify_status == 'pending'
+      while challenge.status == 'pending'
         if Time.now - start_time >= 30
           failure_message = "Failed - timed out waiting for challenge verification."
           raise Letsencrypt::Error::VerificationTimeoutError, failure_message
         end
         sleep(3)
+        challenge.reload
       end
 
       puts "Done!"
 
-      unless challenge.verify_status == 'valid'
+      unless challenge.status == 'valid'
         puts "Problem verifying challenge."
-        failure_message = "Status: #{challenge.verify_status}, Error: #{challenge.error}"
+        failure_message = "Status: #{challenge.status}, Error: #{challenge.error}"
         raise Letsencrypt::Error::VerificationError, failure_message
       end
 
@@ -110,10 +110,13 @@ namespace :letsencrypt do
     })
 
     # Create CSR
-    csr = Acme::Client::CertificateRequest.new(names: domains)
+    csr_private_key = OpenSSL::PKey::RSA.new(4096)
+    csr = Acme::Client::CertificateRequest.new(names: domains, private_key: csr_private_key)
+    order.finalize(csr: csr)
+    sleep(1) while order.status == 'processing'
 
     # Get certificate
-    certificate = client.new_certificate(csr) # => #<Acme::Client::Certificate ....>
+    certificate = order.certificate # => #<Acme::Client::Certificate ....>
 
     # Send certificates to Heroku via API
 
@@ -127,20 +130,19 @@ namespace :letsencrypt do
     # First check for existing certificates:
     certificates = endpoint.list(heroku_app)
 
+    certinfo = {
+        certificate_chain: certificate,
+        private_key: csr_private_key
+    }
+
     begin
       if certificates.any?
         print "Updating existing certificate #{certificates[0]['name']}..."
-        endpoint.update(heroku_app, certificates[0]['name'], {
-          certificate_chain: certificate.fullchain_to_pem,
-          private_key: certificate.request.private_key.to_pem
-        })
+        endpoint.update(heroku_app, certificates[0]['name'], certinfo)
         puts "Done!"
       else
         print "Adding new certificate..."
-        endpoint.create(heroku_app, {
-          certificate_chain: certificate.fullchain_to_pem,
-          private_key: certificate.request.private_key.to_pem
-        })
+        endpoint.create(heroku_app, certinfo)
         puts "Done!"
       end
     rescue Excon::Error::UnprocessableEntity => e
