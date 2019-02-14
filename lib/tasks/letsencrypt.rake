@@ -34,17 +34,15 @@ namespace :letsencrypt do
           'ACME_KEY' => private_key.to_pem,
           'ACME_KID' => registration.kid
       })
-      puts "Done!"
+      puts "Done! Use the following values for the key variables in future:",
+           "ACME_KEY: #{private_key.to_pem}",
+           ("ACME_KID: #{registration.kid}" if Letsencrypt.configuration.acme_kid.blank?)
     else
       print "Using existing LetsEncrypt registration"
       client = Acme::Client.new(private_key: private_key,
                                 directory: Letsencrypt.configuration.acme_directory,
                                 kid: Letsencrypt.configuration.acme_kid)
     end
-
-    puts "Use the following values for the key variables in future:",
-         "ACME_KEY: #{private_key.to_pem}",
-         ("ACME_KID: #{registration.kid}" if Letsencrypt.configuration.acme_kid.blank?)
 
     if Letsencrypt.configuration.acme_domain
       puts "Using ACME_DOMAIN configuration variable..."
@@ -175,7 +173,7 @@ namespace :letsencrypt do
     sleep(1) while order.status == 'processing'
 
     # Get certificate
-    certificate = order.certificate # => #<Acme::Client::Certificate ....>
+    certificate = order.certificate # => PEM-formatted certificate
 
     # Send certificates to Heroku via API
 
@@ -191,7 +189,7 @@ namespace :letsencrypt do
 
     certinfo = {
         certificate_chain: certificate,
-        private_key: csr_private_key
+        private_key: csr_private_key.to_pem
     }
 
     begin
