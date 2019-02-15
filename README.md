@@ -82,6 +82,8 @@ which you should set.
  * `SSL_TYPE`: Optional: One of `sni` or `endpoint`, defaults to `sni`.
    `endpoint` requires your app to have an
    [SSL endpoint addon](https://elements.heroku.com/addons/ssl) configured.
+ * `FORCE_DNS`: Optional: set this to anything if you'd like to force
+    the DNS validation method.
 
 The gem itself will temporarily create additional environment variables during
 the challenge / validation process:

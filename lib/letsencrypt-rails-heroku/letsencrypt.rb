@@ -16,7 +16,7 @@ module Letsencrypt
 
   class Configuration
     attr_accessor :heroku_token, :heroku_app, :acme_email, :acme_domain,
-      :acme_directory, :ssl_type, :terms_agreed, :acme_key, :acme_kid
+      :acme_directory, :ssl_type, :terms_agreed, :acme_key, :acme_kid, :force_dns
     
     # Not settable by user; part of the gem's behaviour.
     attr_reader :acme_challenge_filename, :acme_challenge_file_content
@@ -31,6 +31,7 @@ module Letsencrypt
       @acme_domain = ENV["ACME_DOMAIN"]
       @acme_directory = ENV["ACME_DIRECTORY"] || 'https://acme-v02.api.letsencrypt.org/directory'
       @ssl_type = ENV["SSL_TYPE"] || 'sni'
+      @force_dns = ENV.key? "FORCE_DNS"
       @acme_challenge_filename = ENV["ACME_CHALLENGE_FILENAME"]
       @acme_challenge_file_content = ENV["ACME_CHALLENGE_FILE_CONTENT"]
     end

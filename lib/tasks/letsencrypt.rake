@@ -61,65 +61,15 @@ namespace :letsencrypt do
     order.authorizations.each do |auth|
       challenge = auth.http
       # Always prefer HTTP challenge to DNS challenge; only use DNS challenge where
-      # HTTP challenge isn't possible (ex: wildcard domains)
-      if challenge
-        print "Setting config vars on Heroku..."
-        heroku.config_var.update(heroku_app, {
-            'ACME_CHALLENGE_FILENAME' => challenge.filename,
-            'ACME_CHALLENGE_FILE_CONTENT' => challenge.file_content
-        })
-        puts "Done!"
-
-        # Wait for app to come up
-        print "Testing filename works (to bring up app)..."
-
-        # Get the domain name from Heroku
-        hostname = heroku.domain.list(heroku_app).first['hostname']
-
-        # Wait at least a little bit, otherwise the first request will almost always fail.
-        sleep(2)
-
-        start_time = Time.now
-
-        begin
-          open("http://#{hostname}/#{challenge.filename}").read
-        rescue OpenURI::HTTPError, RuntimeError => e
-          raise e if e.is_a?(RuntimeError) && !e.message.include?("redirection forbidden")
-          if Time.now - start_time <= 60
-            puts "Error fetching challenge, retrying... #{e.message}"
-            sleep(5)
-            retry
-          else
-            failure_message = "Error waiting for response from http://#{hostname}/#{challenge.filename}, Error: #{e.message}"
-            raise Letsencrypt::Error::ChallengeUrlError, failure_message
-          end
-        end
-
-        puts "Done!"
+      # HTTP challenge isn't possible (ex: wildcard domains), or where explicitly
+      # requested in the environment
+      if challenge and !(Letsencrypt.configuration.force_dns)
+        dns = Letsencrypt::VerifyWith.http heroku, heroku_app, challenge
       else
         puts "HTTP challenge unavailable, falling back to DNS challenge"
         using_dns = true
-        challenge = auth.dns
-        # Technically this could be something other than TXT I think, but acme-client
-        # only supports TXT, so I've only supported that here as well.
-        already_exists = false
-        Resolv::DNS.open do |dns|
-          ress = dns.getresources challenge.record_name + "." + auth.domain, Resolv::DNS::Resource::IN::TXT
-          ress.each do |r|
-            r.strings.each do |s|
-              if s == challenge.record_content
-                already_exists = true
-                break
-              end
-            end
-            break if already_exists
-          end
-        end
-        unless already_exists
-          dns_records_to_change.push(domain: auth.domain, record: { name: challenge.record_name,
-                                                         type: challenge.record_type,
-                                                         content: challenge.record_content })
-        end
+        dns = Letsencrypt::VerifyWith.dns auth
+        dns_records_to_change.push(dns[:records]) unless dns[:success]
       end
 
       if using_dns && !dns_records_to_change.blank?
