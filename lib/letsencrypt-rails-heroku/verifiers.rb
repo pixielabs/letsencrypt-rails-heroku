@@ -1,15 +1,14 @@
 module Letsencrypt
   module VerifyWith
     def self.http(heroku, heroku_app, challenge)
-      print "Setting config vars on Heroku..."
-      heroku.config_var.update(heroku_app, {
-          'ACME_CHALLENGE_FILENAME' => challenge.filename,
-          'ACME_CHALLENGE_FILE_CONTENT' => challenge.file_content
-      })
-      puts "Done!"
+      print 'Setting config vars on Heroku...'
+      heroku.config_var.update(heroku_app,
+                               'ACME_CHALLENGE_FILENAME' => challenge.filename,
+                               'ACME_CHALLENGE_FILE_CONTENT' => challenge.file_content)
+      puts 'Done!'
 
       # Wait for app to come up
-      print "Testing filename works (to bring up app)..."
+      print 'Testing filename works (to bring up app)...'
 
       # Get the domain name from Heroku
       hostname = heroku.domain.list(heroku_app).first['hostname']
@@ -22,7 +21,8 @@ module Letsencrypt
       begin
         open("http://#{hostname}/#{challenge.filename}").read
       rescue OpenURI::HTTPError, RuntimeError => e
-        raise e if e.is_a?(RuntimeError) && !e.message.include?("redirection forbidden")
+        raise e if e.is_a?(RuntimeError) && !e.message.include?('redirection forbidden')
+
         if Time.now - start_time <= 60
           puts "Error fetching challenge, retrying... #{e.message}"
           sleep(5)
@@ -33,7 +33,7 @@ module Letsencrypt
         end
       end
 
-      puts "Done!"
+      puts 'Done!'
     end
 
     def self.dns(auth)
@@ -42,7 +42,7 @@ module Letsencrypt
       # only supports TXT, so I've only supported that here as well.
       already_exists = false
       Resolv::DNS.open do |dns|
-        ress = dns.getresources challenge.record_name + "." + auth.domain, Resolv::DNS::Resource::IN::TXT
+        ress = dns.getresources challenge.record_name + '.' + auth.domain, Resolv::DNS::Resource::IN::TXT
         ress.each do |r|
           r.strings.each do |s|
             if s == challenge.record_content
