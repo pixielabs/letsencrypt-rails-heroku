@@ -1,6 +1,6 @@
-module LetsEncrypt
+module Letsencrypt
   module VerifyWith
-    def http(heroku, heroku_app, challenge)
+    def self.http(heroku, heroku_app, challenge)
       print "Setting config vars on Heroku..."
       heroku.config_var.update(heroku_app, {
           'ACME_CHALLENGE_FILENAME' => challenge.filename,
@@ -36,7 +36,7 @@ module LetsEncrypt
       puts "Done!"
     end
 
-    def dns(auth)
+    def self.dns(auth)
       challenge = auth.dns
       # Technically this could be something other than TXT I think, but acme-client
       # only supports TXT, so I've only supported that here as well.
