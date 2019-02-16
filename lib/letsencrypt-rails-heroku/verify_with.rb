@@ -35,6 +35,7 @@ module LetsEncrypt
 
       puts "Done!"
     end
+
     def dns(auth)
       challenge = auth.dns
       # Technically this could be something other than TXT I think, but acme-client
