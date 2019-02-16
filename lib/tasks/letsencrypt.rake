@@ -68,8 +68,12 @@ namespace :letsencrypt do
       else
         puts "HTTP challenge unavailable, falling back to DNS challenge"
         using_dns = true
-        dns = Letsencrypt::VerifyWith.dns auth
-        dns_records_to_change.push(dns[:records]) unless dns[:success]
+        result = Letsencrypt::VerifyWith.dns auth
+        if result[:success]
+          challenge = result[:challenge]
+        else
+          dns_records_to_change.push result[:records]
+        end
       end
 
       if using_dns && !dns_records_to_change.blank?

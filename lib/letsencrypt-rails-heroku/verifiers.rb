@@ -54,7 +54,7 @@ module Letsencrypt
         end
       end
       if already_exists
-        { success: true }
+        { success: true, challenge: challenge }
       else
         { success: false,
           records: { domain: auth.domain,
