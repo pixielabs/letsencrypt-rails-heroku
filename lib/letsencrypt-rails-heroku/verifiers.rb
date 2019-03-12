@@ -20,8 +20,7 @@ module Letsencrypt
       start_time = Time.now
 
       begin
-        OpenSSL::SSL::VERIFY_PEER = OpenSSL::SSL::VERIFY_NONE
-        open("http://#{hostname}/#{challenge.filename}").read
+        open("http://#{hostname}/#{challenge.filename}", {ssl_verify_mode: OpenSSL::SSL::VERIFY_NONE}).read
       rescue OpenURI::HTTPError, RuntimeError => e
         raise e if e.is_a?(RuntimeError) && !e.message.include?('redirection forbidden')
 
