@@ -1,3 +1,4 @@
+require 'openssl'
 module Letsencrypt
   module VerifyWith
     def self.http(heroku, heroku_app, challenge)
@@ -19,6 +20,7 @@ module Letsencrypt
       start_time = Time.now
 
       begin
+        OpenSSL::SSL::VERIFY_PEER = OpenSSL::SSL::VERIFY_NONE
         open("http://#{hostname}/#{challenge.filename}").read
       rescue OpenURI::HTTPError, RuntimeError => e
         raise e if e.is_a?(RuntimeError) && !e.message.include?('redirection forbidden')
