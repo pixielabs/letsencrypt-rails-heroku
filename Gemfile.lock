@@ -1,11 +1,3 @@
-GIT
-  remote: git://github.com/jalada/platform-api.git
-  revision: 45ddb3c1a7e2c7f85d979c0791db18e99affb237
-  branch: master
-  specs:
-    platform-api (0.8.0)
-      heroics (~> 0.0.17)
-
 GEM
   remote: https://rubygems.org/
   specs:
@@ -23,7 +15,7 @@ GEM
       thread_safe (~> 0.3, >= 0.3.1)
     docile (1.1.5)
     erubis (2.7.0)
-    excon (0.51.0)
+    excon (0.62.0)
     faraday (0.9.2)
       multipart-post (>= 1.2, < 3)
     git (1.3.0)
@@ -34,15 +26,14 @@ GEM
       hashie (>= 3.4)
       oauth2 (~> 1.0)
     hashie (3.4.6)
-    heroics (0.0.17)
+    heroics (0.0.25)
       erubis (~> 2.0)
       excon
       moneta
       multi_json (>= 1.9.2)
-      netrc
     highline (1.7.8)
     i18n (0.7.0)
-    json (1.8.3)
+    json (1.8.6)
     juwelier (2.1.3)
       builder
       bundler (>= 1.13)
@@ -54,22 +45,24 @@ GEM
       rdoc
       semver
     jwt (1.5.6)
-    mini_portile2 (2.1.0)
+    mini_portile2 (2.4.0)
     minitest (5.9.0)
-    moneta (0.8.0)
-    multi_json (1.12.1)
+    moneta (1.0.0)
+    multi_json (1.13.1)
     multi_xml (0.6.0)
     multipart-post (2.0.0)
-    netrc (0.11.0)
-    nokogiri (1.6.8.1)
-      mini_portile2 (~> 2.1.0)
+    nokogiri (1.10.2)
+      mini_portile2 (~> 2.4.0)
     oauth2 (1.2.0)
       faraday (>= 0.8, < 0.10)
       jwt (~> 1.0)
       multi_json (~> 1.3)
       multi_xml (~> 0.5)
       rack (>= 1.2, < 3)
-    rack (2.0.1)
+    platform-api (2.2.0)
+      heroics (~> 0.0.25)
+      moneta (~> 1.0.0)
+    rack (2.0.7)
     rake (12.0.0)
     rdoc (3.12.2)
       json (~> 1.4)
@@ -96,10 +89,10 @@ DEPENDENCIES
   acme-client (~> 0.4.0)
   bundler (~> 1.0)
   juwelier (~> 2.1.0)
-  platform-api!
+  platform-api
   rdoc (~> 3.12)
   shoulda
   simplecov
 
 BUNDLED WITH
-   1.13.6
+   1.16.6
