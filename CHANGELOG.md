@@ -1,3 +1,19 @@
+# 1.2.1
+
+ - Update `rack` and `nokogiri` dependencies due to reported vulnerabilities
+   in those libraries. Note that these don't affect letsencrypt-rails-heroku
+   directly.
+   [CVE-2018-16471](https://nvd.nist.gov/vuln/detail/CVE-2018-16471),
+   [CVE-2016-4658](https://nvd.nist.gov/vuln/detail/CVE-2016-4658),
+   [CVE-2017-5029](https://nvd.nist.gov/vuln/detail/CVE-2017-5029),
+   [CVE-2018-14404](https://nvd.nist.gov/vuln/detail/CVE-2018-14404),
+   [CVE-2017-18258](https://nvd.nist.gov/vuln/detail/CVE-2017-18258),
+   [CVE-2017-9050](https://nvd.nist.gov/vuln/detail/CVE-2017-9050).
+
+ - Stop using [jalada/platform-api](https://github.com/jalada/platform-api) 
+   because the newer version of the official version supports the API endpoints
+   we need now.
+
 # 1.2.0
 
  - Support SSL Endpoint configuration, as well as the default SNI.
