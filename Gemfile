@@ -2,7 +2,7 @@ source "https://rubygems.org"
 git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 
 gem 'acme-client', '~> 0.4.0'
-gem 'platform-api'
+gem 'platform-api', '~> 2.2'
 
 group :development do
   gem "shoulda", ">= 0"
