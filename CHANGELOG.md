@@ -1,5 +1,8 @@
 # 2.0.0 (unreleased)
 
+Thanks to [@mashedkeyboard](https://github.com/mashedkeyboard) for their
+work on ACME v2, saving registration, and DNS-based validation.
+
  - *BREAKING* You must indicate your acceptance of Let's Encrypt's terms
    and conditions by setting the `ACME_TERMS_AGREED` configuration variable.
  - *BREAKING* Removed `ACME_ENDPOINT` environment variable reference. We never
