@@ -154,7 +154,7 @@ namespace :letsencrypt do
 
     puts "Done!"
 
-    unless order.status == 'ready'
+    unless order.status == 'valid'
       failure_message = "Problem finalizing order - status: #{order.status}"
       raise Letsencrypt::Error::FinalizationError, failure_message
     end
