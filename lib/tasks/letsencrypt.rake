@@ -102,7 +102,7 @@ namespace :letsencrypt do
 
       print "Giving LetsEncrypt some time to verify..."
       # Once you are ready to serve the confirmation request you can proceed.
-      challenge.request_verification
+      challenge.request_validation
 
       start_time = Time.now
       while challenge.status == 'pending'
