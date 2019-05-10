@@ -16,7 +16,7 @@ namespace :letsencrypt do
 
     if Letsencrypt.registered?
       puts "Using existing registration details"
-      private_key = OpenSSL::PKey::RSA.new(Letsencrypt.configuration.acme_key)
+      private_key = OpenSSL::PKey::RSA.new(Letsencrypt.configuration.acme_private_key)
       key_id = Letsencrypt.configuration.acme_key_id
     else
       # Create a private key
