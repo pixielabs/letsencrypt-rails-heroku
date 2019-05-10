@@ -62,7 +62,7 @@ namespace :letsencrypt do
     order = client.new_order(identifiers: domains)
 
     order.authorizations.each do |authorization|
-      puts "Performing verification for #{domain}:"
+      puts "Performing verification for #{authorization.domain}:"
 
       challenge = authorization.http
 
