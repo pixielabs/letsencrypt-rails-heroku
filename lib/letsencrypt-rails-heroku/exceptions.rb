@@ -1,12 +1,16 @@
 module Letsencrypt
   module Error
-    # Exception raised when LetsEncrypt encounters an issue verifying the challenge.
+    # LetsEncrypt encountered an issue verifying the challenge.
     class VerificationError < StandardError; end
-    # Exception raised when challenge URL is not available.
+    # LetsEncrypt encountered an issue finalizing the order.
+    class FinalizationError < StandardError; end
+    # Challenge URL is not available.
     class ChallengeUrlError < StandardError; end
-    # Exception raised on timeout of challenge verification.
+    # Domain verification took longer than we'd like.
     class VerificationTimeoutError < StandardError; end
-    # Exception raised when an error occurs adding the certificate to Heroku.
+    # Order finalization took longer than we'd like.
+    class FinalizationTimeoutError < StandardError; end
+    # Error adding the certificate to Heroku.
     class HerokuCertificateError < StandardError; end
   end
 end

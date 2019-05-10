@@ -14,18 +14,41 @@ namespace :letsencrypt do
     heroku = PlatformAPI.connect_oauth Letsencrypt.configuration.heroku_token
     heroku_app = Letsencrypt.configuration.heroku_app
 
-    # Create a private key
-    print "Creating account key..."
-    private_key = OpenSSL::PKey::RSA.new(4096)
-    puts "Done!"
+    if Letsencrypt.registered?
+      puts "Using existing registration details"
+      private_key = OpenSSL::PKey::RSA.new(Letsencrypt.configuration.acme_key)
+      key_id = Letsencrypt.configuration.acme_key_id
+    else
+      # Create a private key
+      print "Creating account key..."
+      private_key = OpenSSL::PKey::RSA.new(4096)
+      puts "Done!"
 
-    client = Acme::Client.new(private_key: private_key, endpoint: Letsencrypt.configuration.acme_endpoint, connection_options: { request: { open_timeout: 5, timeout: 5 } })
+      client = Acme::Client.new(private_key: private_key,
+                                directory: Letsencrypt.configuration.acme_directory,
+                                connection_options: { 
+                                  request: { 
+                                    open_timeout: 5,
+                                    timeout: 5
+                                  }
+                                })
 
-    print "Registering with LetsEncrypt..."
-    registration = client.register(contact: "mailto:#{Letsencrypt.configuration.acme_email}")
+      print "Registering with LetsEncrypt..."
+      account = client.new_account(contact: "mailto:#{Letsencrypt.configuration.acme_email}",
+                                   terms_of_service_agreed: true)
 
-    registration.agree_terms
-    puts "Done!"
+      key_id = account.kid
+      puts "Done!"
+      print "Saving account details as configuration variables..."
+      heroku.config_var.update(heroku_app,
+                               'ACME_PRIVATE_KEY' => private_key.to_pem,
+                               'ACME_KEY_ID' => account.kid)
+      puts "Done!"
+    end
+
+    client = Acme::Client.new(private_key: private_key,
+                              directory: Letsencrypt.configuration.acme_directory,
+                              kid: key_id)
 
     domains = []
     if Letsencrypt.configuration.acme_domain
@@ -36,11 +59,12 @@ namespace :letsencrypt do
       puts "Using #{domains.length} configured Heroku domain(s) for this app..."
     end
 
-    domains.each do |domain|
+    order = client.new_order(identifiers: domains)
+
+    order.authorizations.each do |authorization|
       puts "Performing verification for #{domain}:"
 
-      authorization = client.authorize(domain: domain)
-      challenge = authorization.http01
+      challenge = authorization.http
 
       print "Setting config vars on Heroku..."
       heroku.config_var.update(heroku_app, {
@@ -78,24 +102,23 @@ namespace :letsencrypt do
 
       print "Giving LetsEncrypt some time to verify..."
       # Once you are ready to serve the confirmation request you can proceed.
-      challenge.request_verification # => true
-      challenge.verify_status # => 'pending'
+      challenge.request_verification
 
       start_time = Time.now
-
-      while challenge.verify_status == 'pending'
+      while challenge.status == 'pending'
         if Time.now - start_time >= 30
           failure_message = "Failed - timed out waiting for challenge verification."
           raise Letsencrypt::Error::VerificationTimeoutError, failure_message
         end
-        sleep(3)
+        sleep(2)
+        challenge.reload
       end
 
       puts "Done!"
 
-      unless challenge.verify_status == 'valid'
+      unless challenge.status == 'valid'
         puts "Problem verifying challenge."
-        failure_message = "Status: #{challenge.verify_status}, Error: #{challenge.error}"
+        failure_message = "Status: #{challenge.status}, Error: #{challenge.error}"
         raise Letsencrypt::Error::VerificationError, failure_message
       end
 
@@ -110,10 +133,33 @@ namespace :letsencrypt do
     })
 
     # Create CSR
-    csr = Acme::Client::CertificateRequest.new(names: domains)
+    csr_private_key = OpenSSL::PKey::RSA.new 4096
+    csr = Acme::Client::CertificateRequest.new(names: domains,
+                                               private_key: csr_private_key)
 
+    print "Asking LetsEncrypt to finalize our certificate order..."
     # Get certificate
-    certificate = client.new_certificate(csr) # => #<Acme::Client::Certificate ....>
+    order.finalize(csr: csr)
+
+    # Wait for order to process
+    start_time = Time.now
+    while order.status == 'processing'
+      if Time.now - start_time >= 30
+        failure_message = "Failed - timed out waiting for order finalization"
+        raise Letsencrypt::Error::FinalizationTimeoutError, failure_message
+      end
+      sleep(2)
+      order.reload
+    end
+
+    puts "Done!"
+
+    unless order.status == 'ready'
+      failure_message = "Problem finalizing order - status: #{order.status}"
+      raise Letsencrypt::Error::FinalizationError, failure_message
+    end
+
+    certificate = order.certificate # => PEM-formatted certificate
 
     # Send certificates to Heroku via API
 
@@ -124,23 +170,24 @@ namespace :letsencrypt do
                  heroku.ssl_endpoint
                end
 
-    # First check for existing certificates:
-    certificates = endpoint.list(heroku_app)
+    certificate_info = {
+      certificate_chain: certificate,
+      private_key: csr_private_key.to_pem
+    }
+
+    # Fetch existing certificate from Heroku (if any). We just use the first
+    # one; if someone has more than one, they're probably not actually using
+    # this gem. Could also be an error?
+    existing_certificate = endpoint.list(heroku_app)[0]
 
     begin
-      if certificates.any?
-        print "Updating existing certificate #{certificates[0]['name']}..."
-        endpoint.update(heroku_app, certificates[0]['name'], {
-          certificate_chain: certificate.fullchain_to_pem,
-          private_key: certificate.request.private_key.to_pem
-        })
+      if existing_certificate
+        print "Updating existing certificate #{existing_certificate['name']}..."
+        endpoint.update(heroku_app, existing_certificates['name'], certificate_info)
         puts "Done!"
       else
         print "Adding new certificate..."
-        endpoint.create(heroku_app, {
-          certificate_chain: certificate.fullchain_to_pem,
-          private_key: certificate.request.private_key.to_pem
-        })
+        endpoint.create(heroku_app, certificate_info)
         puts "Done!"
       end
     rescue Excon::Error::UnprocessableEntity => e

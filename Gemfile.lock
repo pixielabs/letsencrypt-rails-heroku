@@ -1,7 +1,7 @@
 GEM
   remote: https://rubygems.org/
   specs:
-    acme-client (0.4.1)
+    acme-client (2.0.3)
       faraday (~> 0.9, >= 0.9.1)
     activesupport (5.0.0)
       concurrent-ruby (~> 1.0, >= 1.0.2)
@@ -86,7 +86,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  acme-client (~> 0.4.0)
+  acme-client (~> 2.0)
   bundler (~> 1.0)
   juwelier (~> 2.1.0)
   platform-api (~> 2.2)
