@@ -46,6 +46,7 @@ namespace :letsencrypt do
       puts "Done!"
     end
 
+    # Make a new Acme::Client with whichever private_key & key_id we ended up with.
     client = Acme::Client.new(private_key: private_key,
                               directory: Letsencrypt.configuration.acme_directory,
                               kid: key_id)
