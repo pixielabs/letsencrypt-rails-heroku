@@ -61,19 +61,24 @@ end
 
 ## Configuring
 
-By default the gem will try to use the following set of configuration variables,
-which you should set.
+By default the gem will try to use the following set of configuration
+variables. You must set:
+
+ * `ACME_EMAIL`: Your email address, should be valid.
+ * `ACME_TERMS_AGREED`: Existence of this environment variable represents your
+   agreement to [Let's Encrypt's terms of service](https://letsencrypt.org/repository/).
+ * `HEROKU_TOKEN`: An API token for this app. See below
+ * `HEROKU_APP`: Name of Heroku app e.g. bottomless-cavern-7173
+
+You can also set:
 
  * `ACME_DOMAIN`: Comma separated list of domains for which you want
    certificates, e.g. `example.com,www.example.com`. Your Heroku app should be
-   configured to answer to all these domains, because LetsEncrypt will make a
+   configured to answer to all these domains, because Let's Encrypt will make a
    request to verify ownership.
 
    If you leave this blank, the gem will try and use the Heroku API to get a 
    list of configured domains for your app, and verify all of them.
- * `ACME_EMAIL`: Your email address, should be valid.
- * `HEROKU_TOKEN`: An API token for this app. See below
- * `HEROKU_APP`: Name of Heroku app e.g. bottomless-cavern-7173
  * `SSL_TYPE`: Optional: One of `sni` or `endpoint`, defaults to `sni`.
    `endpoint` requires your app to have an
    [SSL endpoint addon](https://elements.heroku.com/addons/ssl) configured.
@@ -83,6 +88,14 @@ the challenge / validation process:
 
  * `ACME_CHALLENGE_FILENAME`: The path of the file LetsEncrypt will request.
  * `ACME_CHALLENGE_FILE_CONTENT`: The content of that challenge file.
+
+It will also create two permanent environment variables after the first run:
+
+ * `ACME_PRIVATE_KEY`: Private key used to create requests for certificates.
+ * `ACME_KEY_ID`: Key ID assigned to your private key by Let's Encrypt.
+
+If you remove these, a new account will be created and new environment
+variables will be set.
 
 ## Creating a Heroku token
 

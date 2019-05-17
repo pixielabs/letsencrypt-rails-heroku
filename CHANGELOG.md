@@ -1,3 +1,21 @@
+# 2.0.0 (unreleased)
+
+Thanks to [@mashedkeyboard](https://github.com/mashedkeyboard) for their
+work on ACME v2, saving registration, and DNS-based validation.
+
+ - *BREAKING* You must indicate your acceptance of Let's Encrypt's terms
+   and conditions by setting the `ACME_TERMS_AGREED` configuration variable.
+ - *BREAKING* Removed `ACME_ENDPOINT` environment variable reference. We never
+   documented that we support alternative endpoints, and we never tested it,
+   and the gem is called *letsencrypt*-rails-heroku, so let's not pretend.
+   Please get in touch if you were using this configuration variable, we'd
+   like to hear from you! Psst; you can still set `acme_directory` when
+   configuring the gem in an initializer.
+ - Use version 2 of the ACME API, paving the way for DNS validation.
+ - Save private key & key ID variables after registering with Let's Encrypt.
+   This will create two new permanent environment variables, `ACME_PRIVATE_KEY`
+   and `ACME_KEY_ID`.
+
 # 1.2.1
 
  - Update `rack` and `nokogiri` dependencies due to reported vulnerabilities
