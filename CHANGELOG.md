@@ -1,4 +1,4 @@
-# 2.0.0 (unreleased)
+# 2.0.0 
 
 Thanks to [@mashedkeyboard](https://github.com/mashedkeyboard) for their
 work on ACME v2, saving registration, and DNS-based validation.
