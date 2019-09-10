@@ -184,7 +184,7 @@ namespace :letsencrypt do
     begin
       if existing_certificate
         print "Updating existing certificate #{existing_certificate['name']}..."
-        endpoint.update(heroku_app, existing_certificates['name'], certificate_info)
+        endpoint.update(heroku_app, existing_certificate['name'], certificate_info)
         puts "Done!"
       else
         print "Adding new certificate..."
