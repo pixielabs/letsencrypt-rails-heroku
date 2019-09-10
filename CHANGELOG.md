@@ -1,3 +1,7 @@
+# 2.0.1
+
+ - Fixed a typo that broke renewals with existing certificates
+
 # 2.0.0 
 
 Thanks to [@mashedkeyboard](https://github.com/mashedkeyboard) for their
