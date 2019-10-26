@@ -76,9 +76,6 @@ namespace :letsencrypt do
 
       # Wait for app to come up
       print "Testing filename works (to bring up app)..."
-
-      # Get the domain name from Heroku
-      hostname = heroku.domain.list(heroku_app).first['hostname']
       
       # Wait at least a little bit, otherwise the first request will almost always fail.
       sleep(2)
@@ -86,7 +83,7 @@ namespace :letsencrypt do
       start_time = Time.now
 
       begin
-        open("http://#{hostname}/#{challenge.filename}").read
+        open("http://#{domain}/#{challenge.filename}").read
       rescue OpenURI::HTTPError, RuntimeError => e
         raise e if e.is_a?(RuntimeError) && !e.message.include?("redirection forbidden")
         if Time.now - start_time <= 60
@@ -94,7 +91,7 @@ namespace :letsencrypt do
           sleep(5)
           retry
         else
-          failure_message = "Error waiting for response from http://#{hostname}/#{challenge.filename}, Error: #{e.message}"
+          failure_message = "Error waiting for response from http://#{domain}/#{challenge.filename}, Error: #{e.message}"
           raise Letsencrypt::Error::ChallengeUrlError, failure_message
         end
       end
