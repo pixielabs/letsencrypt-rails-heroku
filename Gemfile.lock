@@ -3,14 +3,15 @@ GEM
   specs:
     acme-client (2.0.3)
       faraday (~> 0.9, >= 0.9.1)
-    activesupport (5.0.0)
+    activesupport (6.0.3.1)
       concurrent-ruby (~> 1.0, >= 1.0.2)
-      i18n (~> 0.7)
+      i18n (>= 0.7, < 2)
       minitest (~> 5.1)
       tzinfo (~> 1.1)
+      zeitwerk (~> 2.2, >= 2.2.2)
     addressable (2.4.0)
     builder (3.2.2)
-    concurrent-ruby (1.0.2)
+    concurrent-ruby (1.1.6)
     descendants_tracker (0.0.4)
       thread_safe (~> 0.3, >= 0.3.1)
     docile (1.1.5)
@@ -32,7 +33,8 @@ GEM
       moneta
       multi_json (>= 1.9.2)
     highline (1.7.8)
-    i18n (0.7.0)
+    i18n (1.8.2)
+      concurrent-ruby (~> 1.0)
     json (1.8.6)
     juwelier (2.1.3)
       builder
@@ -46,7 +48,7 @@ GEM
       semver
     jwt (1.5.6)
     mini_portile2 (2.4.0)
-    minitest (5.9.0)
+    minitest (5.14.1)
     moneta (1.0.0)
     multi_json (1.13.1)
     multi_xml (0.6.0)
@@ -78,9 +80,10 @@ GEM
       json (>= 1.8, < 3)
       simplecov-html (~> 0.10.0)
     simplecov-html (0.10.0)
-    thread_safe (0.3.5)
-    tzinfo (1.2.2)
+    thread_safe (0.3.6)
+    tzinfo (1.2.7)
       thread_safe (~> 0.1)
+    zeitwerk (2.3.0)
 
 PLATFORMS
   ruby
