@@ -62,7 +62,7 @@ GEM
     platform-api (2.2.0)
       heroics (~> 0.0.25)
       moneta (~> 1.0.0)
-    rack (2.0.7)
+    rack (2.2.3)
     rake (12.0.0)
     rdoc (3.12.2)
       json (~> 1.4)
