@@ -1,3 +1,8 @@
+# 2.0.2
+
+ - Include OpenSSL::SSL::SSLError as a valid error we retry for when waiting
+   for the app to come back up.
+
 # 2.0.1
 
  - Fixed a typo that broke renewals with existing certificates
