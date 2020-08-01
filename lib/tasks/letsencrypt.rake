@@ -66,6 +66,8 @@ namespace :letsencrypt do
       puts "Performing verification for #{authorization.domain}:"
 
       challenge = authorization.http
+      
+      raise Letsencrypt::Error::NoHTTPChallengeError, "No HTTP challenge was given by Let's Encrypt for #{authorization.domain}, and letsencrypt-rails-heroku does not currently support other challenge types." unless challenge
 
       print "Setting config vars on Heroku..."
       heroku.config_var.update(heroku_app, {
