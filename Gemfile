@@ -1,7 +1,7 @@
 source "https://rubygems.org"
 
 gem 'acme-client', '~> 2.0'
-gem 'platform-api', '>= 2.2'
+gem 'platform-api', '>= 2.2', '< 4'
 
 group :development do
   gem "shoulda", ">= 0"
