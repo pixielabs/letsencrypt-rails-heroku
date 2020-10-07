@@ -12,5 +12,7 @@ module Letsencrypt
     class FinalizationTimeoutError < StandardError; end
     # Error adding the certificate to Heroku.
     class HerokuCertificateError < StandardError; end
+    # No HTTP challenge available from certificate provider.
+    class NoHTTPChallengeError < StandardError; end
   end
 end
