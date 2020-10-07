@@ -196,6 +196,11 @@ namespace :letsencrypt do
     rescue Excon::Error::UnprocessableEntity => e
       warn "Error adding certificate to Heroku. Response from Heroku’s API follows:"
       raise Letsencrypt::Error::HerokuCertificateError, e.response.body
+    rescue Excon::Error::Forbidden => e
+      warn "Error adding certificate to Heroku, expected an OK response status, got a '403 Forbidden'. Response follows:"
+      puts e.response.body
+      # Re-raise for now.
+      raise e
     end
 
   end
