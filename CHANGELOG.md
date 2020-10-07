@@ -1,3 +1,11 @@
+# 2.0.3
+
+ - Raise an error when the HTTP challenge is nil (#71). Thanks
+   [@mashedkeyboard](https://github.com/mashedkeyboard)!
+ - Return the response body on a 403 Forbidden from Heroku, not that it's
+   that useful.
+ - Relax `platform-api` version requirements, as it works OK with v3 too.
+
 # 2.0.2
 
  - Include OpenSSL::SSL::SSLError as a valid error we retry for when waiting
@@ -5,7 +13,7 @@
 
 # 2.0.1
 
- - Fixed a typo that broke renewals with existing certificates
+ - Fixed a typo that broke renewals with existing certificates.
 
 # 2.0.0 
 
