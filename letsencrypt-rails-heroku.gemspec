@@ -11,7 +11,7 @@ Gem::Specification.new do |s|
   s.required_rubygems_version = Gem::Requirement.new(">= 0".freeze) if s.respond_to? :required_rubygems_version=
   s.require_paths = ["lib".freeze]
   s.authors = ["Pixie Labs".freeze, "David Somers".freeze, "Abigail McPhillips".freeze]
-  s.date = "2020-07-24"
+  s.date = "2020-10-07"
   s.description = "This gem automatically handles creation, renewal, and applying SSL certificates from LetsEncrypt to your Heroku account.".freeze
   s.email = "team@pixielabs.io".freeze
   s.extra_rdoc_files = [
@@ -38,7 +38,7 @@ Gem::Specification.new do |s|
   ]
   s.homepage = "https://github.com/pixielabs/letsencrypt-rails-heroku".freeze
   s.licenses = ["MIT".freeze]
-  s.rubygems_version = "3.0.8".freeze
+  s.rubygems_version = "3.0.6".freeze
   s.summary = "Automatic LetsEncrypt certificates in your Rails app on Heroku".freeze
 
   if s.respond_to? :specification_version then
@@ -46,7 +46,7 @@ Gem::Specification.new do |s|
 
     if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
       s.add_runtime_dependency(%q<acme-client>.freeze, ["~> 2.0"])
-      s.add_runtime_dependency(%q<platform-api>.freeze, ["~> 2.2"])
+      s.add_runtime_dependency(%q<platform-api>.freeze, ["~> 3.0"])
       s.add_development_dependency(%q<shoulda>.freeze, [">= 0"])
       s.add_development_dependency(%q<rdoc>.freeze, ["~> 3.12"])
       s.add_development_dependency(%q<bundler>.freeze, ["~> 1.0"])
@@ -54,7 +54,7 @@ Gem::Specification.new do |s|
       s.add_development_dependency(%q<simplecov>.freeze, [">= 0"])
     else
       s.add_dependency(%q<acme-client>.freeze, ["~> 2.0"])
-      s.add_dependency(%q<platform-api>.freeze, ["~> 2.2"])
+      s.add_dependency(%q<platform-api>.freeze, ["~> 3.0"])
       s.add_dependency(%q<shoulda>.freeze, [">= 0"])
       s.add_dependency(%q<rdoc>.freeze, ["~> 3.12"])
       s.add_dependency(%q<bundler>.freeze, ["~> 1.0"])
@@ -63,7 +63,7 @@ Gem::Specification.new do |s|
     end
   else
     s.add_dependency(%q<acme-client>.freeze, ["~> 2.0"])
-    s.add_dependency(%q<platform-api>.freeze, ["~> 2.2"])
+    s.add_dependency(%q<platform-api>.freeze, ["~> 3.0"])
     s.add_dependency(%q<shoulda>.freeze, [">= 0"])
     s.add_dependency(%q<rdoc>.freeze, ["~> 3.12"])
     s.add_dependency(%q<bundler>.freeze, ["~> 1.0"])
