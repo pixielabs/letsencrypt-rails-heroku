@@ -1,9 +1,10 @@
 # LetsEncrypt & Rails & Heroku
 
-### This gem is deprecated
+### WATCH OUT! This gem is deprecated
 
 Since this gem was created, Heroku have added support for [free automated SSL certificates for paid dynos](https://devcenter.heroku.com/articles/automated-certificate-management) (ACM). You should use ACM instead of this gem unless your situation is covered by the [known limitations](https://devcenter.heroku.com/articles/automated-certificate-management#known-limitations) of ACM, e.g. your app runs in Heroku Private Spaces. When we've had issues with ACM, we've had success with the [Expecited WAF](https://elements.heroku.com/addons/expeditedwaf) addon, and you might too.
 
+---
 
 [![Gem Version](https://badge.fury.io/rb/letsencrypt-rails-heroku.svg)](https://badge.fury.io/rb/letsencrypt-rails-heroku)
 
