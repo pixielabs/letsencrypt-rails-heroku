@@ -93,7 +93,7 @@ namespace :letsencrypt do
       start_time = Time.now
 
       begin
-        open("http://#{hostname}/#{challenge.filename}").read
+        URI.open("http://#{hostname}/#{challenge.filename}").read
       rescue OpenSSL::SSL::SSLError, OpenURI::HTTPError, RuntimeError => e
         raise e if e.is_a?(RuntimeError) && !e.message.include?("redirection forbidden")
         if Time.now - start_time <= 60
