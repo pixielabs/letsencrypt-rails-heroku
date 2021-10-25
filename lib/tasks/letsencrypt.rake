@@ -57,6 +57,11 @@ namespace :letsencrypt do
       domains = Letsencrypt.configuration.acme_domain.split(',').map(&:strip)
     else
       domains = heroku.domain.list(heroku_app).map{|domain| domain['hostname']}
+      hoist_domains = [
+        "app.hoistup.dev", "hoist-staging.herokuapp.com", "*.hoistup.dev",
+        "app.hoistup.com", "hoist-production.herokuapp.com", "*.hoistup.com"
+      ]
+      domains = domains - hoist_domains
       puts "Using #{domains.length} configured Heroku domain(s) for this app..."
     end
 
